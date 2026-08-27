@@ -96,7 +96,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     icon: React.FC<{ className?: string }>;
     isProOnly?: boolean;
   }[] = [
-    { id: 'educa', label: 'Educa & Entiende', desc: 'Educación, conducta y bienestar canino', icon: GraduationCap },
+    { id: 'ia', label: 'MiPatas AI', desc: 'Asistente veterinario y legal inteligente', icon: Sparkles, isProOnly: true },
     { id: 'documentos', label: 'Bóveda de Documentos', desc: 'Informes veterinarios y recetas', icon: FileText, isProOnly: true },
     { id: 'medicamentos', label: 'Tratamientos y Medicación', desc: 'Pautas activas y registro de tomas', icon: Pill },
     { id: 'recordatorios', label: 'Recordatorios y Pautas', desc: 'Alertas antiparasitarias y vacunas', icon: Bell },
@@ -104,7 +104,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'perfil', label: 'Ficha Mascota y Ajustes', desc: 'Microchip, pasaporte y datos oficiales', icon: ShieldCheck },
   ];
 
-  const isMoreTabActive = ['educa', 'documentos', 'medicamentos', 'recordatorios', 'familia', 'perfil'].includes(currentTab);
+  const isMoreTabActive = ['ia', 'documentos', 'medicamentos', 'recordatorios', 'familia', 'perfil'].includes(currentTab);
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-amber-100 shadow-2xs">
@@ -430,16 +430,16 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           <button
-            id="mobile-nav-ia"
+            id="mobile-nav-educa"
             type="button"
-            onClick={() => onSelectTab('ia')}
+            onClick={() => onSelectTab('educa')}
             className={`flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-bold transition-colors ${
-              currentTab === 'ia' ? 'text-amber-600 font-black bg-amber-50' : 'text-slate-500 hover:text-slate-800'
+              currentTab === 'educa' ? 'text-amber-600 font-black bg-amber-50' : 'text-slate-500 hover:text-slate-800'
             }`}
-            aria-label="Ir a MiPatas AI"
+            aria-label="Ir a Educa & Entiende"
           >
-            <Sparkles className="w-4 h-4 mb-0.5 text-amber-500" />
-            <span>MiPatas AI</span>
+            <GraduationCap className="w-4 h-4 mb-0.5" />
+            <span>Educa</span>
           </button>
 
           <button
