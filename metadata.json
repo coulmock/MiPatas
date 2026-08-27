@@ -1,0 +1,6 @@
+{
+  "name": "MiPatas",
+  "description": "App española de gestión y bienestar de mascotas con carnet de salud, agenda, recordatorios y asistente inteligente MiPatas AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
