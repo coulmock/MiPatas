@@ -24,6 +24,9 @@ import {
   Cake,
   Info,
   Syringe,
+  GraduationCap,
+  Flame,
+  BookOpen,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -37,6 +40,8 @@ import {
   FamilyMember,
 } from '../types';
 import { NavTab } from './Navbar';
+import { DAILY_SUGGESTIONS_POOL } from '../data/educaData';
+import { storageService } from '../services/storageService';
 
 interface DashboardProps {
   pet: Pet;
@@ -747,6 +752,59 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   Sin recordatorios pendientes para hoy.
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* NEW MODULE: "Hoy con tu perro — Educa & Entiende" Widget */}
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50/80 rounded-3xl border-2 border-amber-200/80 p-5 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-xs">
+                  <GraduationCap className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-black text-slate-900 flex items-center space-x-1.5">
+                    <span>Hoy con {pet.name}</span>
+                    <span className="text-[10px] font-black uppercase text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">
+                      Educa
+                    </span>
+                  </h2>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    Ideas de 5 a 15 min de estimulación y educación respetuosa
+                  </p>
+                </div>
+              </div>
+
+              <button
+                id="dash-open-educa-btn"
+                type="button"
+                onClick={() => onNavigate('educa')}
+                className="text-xs font-black text-amber-700 hover:text-amber-800 flex items-center space-x-0.5"
+              >
+                <span>Ver módulo</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {DAILY_SUGGESTIONS_POOL.slice(0, 2).map((sug) => (
+                <div
+                  key={sug.id}
+                  onClick={() => onNavigate('educa')}
+                  className="p-3 rounded-2xl bg-white border border-amber-100 hover:border-amber-300 hover:shadow-2xs transition-all cursor-pointer flex items-center space-x-3 group"
+                >
+                  <span className="text-2xl group-hover:scale-110 transition-transform">{sug.emoji}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-black text-slate-900 truncate group-hover:text-amber-700">
+                      {sug.title}
+                    </div>
+                    <div className="text-[11px] text-slate-500 font-medium flex items-center space-x-1 mt-0.5">
+                      <Clock className="w-3 h-3 text-amber-500" />
+                      <span>{sug.durationMinutes} min</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

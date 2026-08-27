@@ -25,6 +25,7 @@ import { RemindersView } from './components/RemindersView';
 import { DocumentsView } from './components/DocumentsView';
 import { AiAssistantView } from './components/AiAssistantView';
 import { FamilyView } from './components/FamilyView';
+import { EducaView } from './components/EducaView';
 import { OnboardingModal } from './components/OnboardingModal';
 import { SpanishLawModal } from './components/SpanishLawModal';
 import { ConfirmModal } from './components/ConfirmModal';
@@ -598,6 +599,15 @@ export default function App() {
             onAddEvent={handleAddEvent}
             onDeleteEvent={handleDeleteEvent}
             onToggleEvent={handleToggleEvent}
+          />
+        )}
+
+        {activeTab === 'educa' && activePet && (
+          <EducaView
+            pet={activePet}
+            onNavigate={handleSelectTab}
+            onOpenPricing={() => setShowPricingModal(true)}
+            planTier={planTier}
           />
         )}
 

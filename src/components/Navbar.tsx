@@ -19,6 +19,7 @@ import {
   Zap,
   LogOut,
   CreditCard,
+  GraduationCap,
 } from 'lucide-react';
 import { Pet, PlanTier, AuthUser } from '../types';
 
@@ -27,6 +28,7 @@ export type NavTab =
   | 'salud'
   | 'medicamentos'
   | 'agenda'
+  | 'educa'
   | 'documentos'
   | 'recordatorios'
   | 'ia'
@@ -77,6 +79,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   }[] = [
     { id: 'inicio', label: 'Dashboard', icon: PawPrint },
     { id: 'salud', label: 'Carnet de Salud', icon: HeartPulse },
+    { id: 'educa', label: 'Educa & Entiende', icon: GraduationCap },
     { id: 'medicamentos', label: 'Medicamentos', icon: Pill },
     { id: 'agenda', label: 'Agenda', icon: Calendar },
     { id: 'documentos', label: 'Documentos', icon: FileText, isProOnly: true },
@@ -93,6 +96,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     icon: React.FC<{ className?: string }>;
     isProOnly?: boolean;
   }[] = [
+    { id: 'educa', label: 'Educa & Entiende', desc: 'Educación, conducta y bienestar canino', icon: GraduationCap },
     { id: 'documentos', label: 'Bóveda de Documentos', desc: 'Informes veterinarios y recetas', icon: FileText, isProOnly: true },
     { id: 'medicamentos', label: 'Tratamientos y Medicación', desc: 'Pautas activas y registro de tomas', icon: Pill },
     { id: 'recordatorios', label: 'Recordatorios y Pautas', desc: 'Alertas antiparasitarias y vacunas', icon: Bell },
@@ -100,7 +104,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'perfil', label: 'Ficha Mascota y Ajustes', desc: 'Microchip, pasaporte y datos oficiales', icon: ShieldCheck },
   ];
 
-  const isMoreTabActive = ['documentos', 'medicamentos', 'recordatorios', 'familia', 'perfil'].includes(currentTab);
+  const isMoreTabActive = ['educa', 'documentos', 'medicamentos', 'recordatorios', 'familia', 'perfil'].includes(currentTab);
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-amber-100 shadow-2xs">

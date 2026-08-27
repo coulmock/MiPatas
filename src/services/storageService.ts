@@ -10,6 +10,7 @@ import {
   ActivityLog,
   UserProfile,
   PetWeightEntry,
+  TrainingProgress,
 } from '../types';
 import {
   INITIAL_PETS,
@@ -38,6 +39,7 @@ const KEYS = {
   FAMILY_MEMBERS: 'mipatas_family_members_v1',
   ACTIVITY_LOGS: 'mipatas_activity_logs_v1',
   WEIGHT_HISTORY: 'mipatas_weight_history_v1',
+  TRAINING_PROGRESS: 'mipatas_training_progress_v1',
   ONBOARDING_COMPLETED: 'mipatas_onboarding_completed_v1',
   IS_DEMO_MODE: 'mipatas_is_demo_mode_v1',
 };
@@ -481,6 +483,74 @@ export const StorageService = {
     const updated = [newLog, ...all].slice(0, 100);
     setItem(KEYS.ACTIVITY_LOGS, updated);
     return newLog;
+  },
+
+  // Training Progress (Educa & Entiende)
+  getTrainingProgress(petId: string): TrainingProgress {
+    const all = getItem<Record<string, TrainingProgress>>(KEYS.TRAINING_PROGRESS, {});
+    if (all[petId]) {
+      return all[petId];
+    }
+    const defaultProgress: TrainingProgress = {
+      petId,
+      exercisesCompletedIds: [],
+      practiceDaysStreak: 1,
+      lastPracticeDate: new Date().toISOString().split('T')[0],
+    };
+    return defaultProgress;
+  },
+
+  saveTrainingProgress(progress: TrainingProgress): void {
+    const all = getItem<Record<string, TrainingProgress>>(KEYS.TRAINING_PROGRESS, {});
+    all[progress.petId] = progress;
+    setItem(KEYS.TRAINING_PROGRESS, all);
+  },
+
+  toggleExerciseCompletion(petId: string, exerciseId: string): TrainingProgress {
+    const progress = this.getTrainingProgress(petId);
+    const exists = progress.exercisesCompletedIds.includes(exerciseId);
+    const updatedIds = exists
+      ? progress.exercisesCompletedIds.filter((id) => id !== exerciseId)
+      : [...progress.exercisesCompletedIds, exerciseId];
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    let newStreak = progress.practiceDaysStreak || 0;
+
+    if (!exists) {
+      // If marking as completed, increment streak if first practice of today or yesterday
+      if (progress.lastPracticeDate !== todayStr) {
+        newStreak = Math.max(1, newStreak + 1);
+      }
+    }
+
+    const updated: TrainingProgress = {
+      ...progress,
+      exercisesCompletedIds: updatedIds,
+      practiceDaysStreak: newStreak,
+      lastPracticeDate: todayStr,
+    };
+
+    this.saveTrainingProgress(updated);
+    return updated;
+  },
+
+  recordPracticeSession(petId: string): TrainingProgress {
+    const progress = this.getTrainingProgress(petId);
+    const todayStr = new Date().toISOString().split('T')[0];
+    let newStreak = progress.practiceDaysStreak || 1;
+
+    if (progress.lastPracticeDate !== todayStr) {
+      newStreak += 1;
+    }
+
+    const updated: TrainingProgress = {
+      ...progress,
+      practiceDaysStreak: newStreak,
+      lastPracticeDate: todayStr,
+    };
+
+    this.saveTrainingProgress(updated);
+    return updated;
   },
 
   // Initialization check (does not inject demo data automatically)

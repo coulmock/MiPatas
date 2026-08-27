@@ -32,6 +32,96 @@ export interface Pet {
   photoUrl: string;
   notes?: string;
   community: string; // e.g. Comunidad de Madrid, Cataluña, Andalucía, etc.
+  ageStage?: 'cachorro' | 'adulto' | 'senior';
+  activityLevel?: 'bajo' | 'moderado' | 'alto';
+}
+
+// -------------------------------------------------------------
+// EDUCA & ENTIENDE (Canine Education, Behavior & Wellbeing)
+// -------------------------------------------------------------
+
+export type BehaviorTopicCategory =
+  | 'comportamiento'
+  | 'comunicacion'
+  | 'ansiedad'
+  | 'rutinas'
+  | 'alimentacion'
+  | 'convivencia';
+
+export interface BehaviorTopic {
+  id: string;
+  question: string;
+  category: BehaviorTopicCategory;
+  categoryLabel: string;
+  whatItMeans: string;
+  possibleCauses: string[];
+  whatToObserve: string[];
+  howToReact: string[];
+  whatToAvoid: string[];
+  whenToConsultProfessional: string;
+  suggestedExerciseId?: string;
+  tags?: string[];
+}
+
+export type TrainingExerciseCategory =
+  | 'bases'
+  | 'paseo'
+  | 'vida_diaria'
+  | 'estimulacion_mental';
+
+export type TrainingExerciseLevel = 'principiante' | 'intermedio' | 'avanzado';
+
+export interface VideoPlaceholderInfo {
+  videoUrl?: string;
+  thumbnailUrl?: string;
+  durationSeconds?: number;
+  isPlaceholder: boolean;
+}
+
+export interface TrainingExercise {
+  id: string;
+  name: string;
+  category: TrainingExerciseCategory;
+  objective: string;
+  level: TrainingExerciseLevel;
+  durationMinutes: number;
+  frequency: string;
+  materials: string[];
+  steps: string[];
+  commonMistakes: string[];
+  tips: string[];
+  recommendedAgeStage: ('cachorro' | 'adulto' | 'senior')[];
+  videoPlaceholder: VideoPlaceholderInfo;
+  iconName?: string;
+}
+
+export type WellbeingCategory = 'fisico' | 'mental' | 'social' | 'descanso';
+
+export interface WellbeingTip {
+  id: string;
+  category: WellbeingCategory;
+  title: string;
+  description: string;
+  actionPoints: string[];
+  recommendedFor?: string;
+  iconName?: string;
+}
+
+export interface DailySuggestion {
+  id: string;
+  emoji: string;
+  durationMinutes: number;
+  title: string;
+  description?: string;
+  linkedExerciseId?: string;
+  category?: string;
+}
+
+export interface TrainingProgress {
+  petId: string;
+  exercisesCompletedIds: string[];
+  practiceDaysStreak: number;
+  lastPracticeDate?: string; // YYYY-MM-DD
 }
 
 export type HealthRecordCategory =
