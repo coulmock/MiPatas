@@ -39,6 +39,7 @@ const KEYS = {
   ACTIVITY_LOGS: 'mipatas_activity_logs_v1',
   WEIGHT_HISTORY: 'mipatas_weight_history_v1',
   ONBOARDING_COMPLETED: 'mipatas_onboarding_completed_v1',
+  IS_DEMO_MODE: 'mipatas_is_demo_mode_v1',
 };
 
 function getItem<T>(key: string, defaultValue: T): T {
@@ -487,6 +488,14 @@ export const StorageService = {
     // No-op: keep storage clean for real users
   },
 
+  // Demo Mode check
+  isDemoMode(): boolean {
+    return getItem<boolean>(KEYS.IS_DEMO_MODE, false);
+  },
+  setDemoMode(isDemo: boolean): void {
+    setItem(KEYS.IS_DEMO_MODE, isDemo);
+  },
+
   // Load interactive demo data on explicit user request
   loadDemoData(): void {
     setItem(KEYS.PETS, INITIAL_PETS);
@@ -502,6 +511,14 @@ export const StorageService = {
     setItem(KEYS.ACTIVITY_LOGS, INITIAL_ACTIVITY_LOGS);
     setItem(KEYS.WEIGHT_HISTORY, INITIAL_WEIGHT_HISTORY);
     setItem(KEYS.ONBOARDING_COMPLETED, true);
+    setItem(KEYS.IS_DEMO_MODE, true);
+  },
+
+  // Exit demo mode and clear all sample data
+  exitDemoMode(): void {
+    this.clearAllData();
+    setItem(KEYS.IS_DEMO_MODE, false);
+    setItem(KEYS.ONBOARDING_COMPLETED, false);
   },
 
   // Clear all local data to start 100% fresh

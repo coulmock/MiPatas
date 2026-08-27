@@ -197,13 +197,23 @@ export interface ActivityLog {
   timestamp: string; // ISO string
 }
 
+export type PlanTier = 'free' | 'pro';
+
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  plan: PlanTier;
+  createdAt?: string;
+}
+
 export interface UserProfile {
   id: string;
   name: string;
   email: string;
   phone?: string;
   community: string; // Spanish autonomous community
-  plan: 'free' | 'premium';
+  plan: PlanTier;
   pushNotificationsEnabled: boolean;
   emailNotificationsEnabled: boolean;
   smsNotificationsEnabled: boolean;

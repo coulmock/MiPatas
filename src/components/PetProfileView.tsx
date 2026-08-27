@@ -20,8 +20,8 @@ interface PetProfileViewProps {
   onOpenAddPet: () => void;
   onUpdatePet: (petId: string, updates: Partial<Pet>) => void;
   onDeletePet: (petId: string) => void;
-  weightHistory: PetWeightEntry[];
-  onOpenWeightModal: () => void;
+  weightHistory?: PetWeightEntry[];
+  onOpenWeightModal?: () => void;
   onOpenLawModal: () => void;
 }
 
@@ -79,10 +79,10 @@ export const PetProfileView: React.FC<PetProfileViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 pb-16">
+    <div className="space-y-6 pb-28 sm:pb-16 w-full max-w-full">
       {/* Top Pet Switcher Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
-        <div className="flex items-center space-x-2 overflow-x-auto pb-1 sm:pb-0">
+        <div className="flex items-center space-x-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
           {allPets.map((p) => (
             <button
               key={p.id}
@@ -110,7 +110,7 @@ export const PetProfileView: React.FC<PetProfileViewProps> = ({
           </button>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 shrink-0">
           <button
             onClick={() => setShowIdCard(!showIdCard)}
             className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors"
@@ -146,15 +146,15 @@ export const PetProfileView: React.FC<PetProfileViewProps> = ({
 
       {/* DNI CANINO DIGITAL / PASAPORTE PREVIEW CARD */}
       {showIdCard && (
-        <div className="relative overflow-hidden rounded-2xl bg-slate-900 text-white p-6 shadow-xl border border-slate-800">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+        <div className="relative rounded-2xl bg-slate-900 text-white p-5 sm:p-6 shadow-xl border border-slate-800 animate-in fade-in zoom-in-98 duration-200">
+          <div className="flex flex-wrap items-center justify-between border-b border-slate-800 pb-3 mb-4 gap-2">
             <div className="flex items-center space-x-2">
               <span className="text-xl">🇪🇸</span>
               <div>
                 <div className="text-[10px] font-bold uppercase tracking-widest text-indigo-400">
                   REINO DE ESPAÑA • REIAC
                 </div>
-                <div className="text-xs font-bold tracking-tight text-white">
+                <div className="text-xs sm:text-sm font-bold tracking-tight text-white">
                   TARJETA DE IDENTIFICACIÓN ANIMAL (DNI MASCOTA)
                 </div>
               </div>
@@ -164,51 +164,55 @@ export const PetProfileView: React.FC<PetProfileViewProps> = ({
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-5 items-center">
             <div className="sm:col-span-1 text-center">
               <img
                 src={pet.photoUrl}
                 alt={pet.name}
                 className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl object-cover border border-white/20 shadow-md mx-auto"
               />
-              <div className="text-[10px] font-semibold text-indigo-300 mt-2 uppercase">
-                {pet.species}
+              <div className="text-[10px] font-semibold text-indigo-300 mt-2 uppercase tracking-wider">
+                {pet.species} • {pet.sex === 'hembra' ? 'Hembra' : 'Macho'}
               </div>
             </div>
 
-            <div className="sm:col-span-2 space-y-1.5 text-xs">
+            <div className="sm:col-span-2 space-y-2 text-xs">
               <div>
-                <span className="text-slate-400 text-[10px] uppercase font-semibold">Nombre:</span>
-                <div className="text-base font-bold text-white">{pet.name}</div>
+                <span className="text-slate-400 text-[10px] uppercase font-semibold">Nombre Oficial:</span>
+                <div className="text-lg font-bold text-white tracking-tight">{pet.name}</div>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <span className="text-slate-400 text-[10px] uppercase font-semibold">Raza:</span>
-                  <div className="font-semibold text-slate-200">{pet.breed}</div>
+                  <div className="font-semibold text-slate-200 truncate">{pet.breed}</div>
                 </div>
                 <div>
-                  <span className="text-slate-400 text-[10px] uppercase font-semibold">Sexo / Manto:</span>
-                  <div className="font-semibold text-slate-200">
-                    {pet.sex === 'hembra' ? 'Hembra ♀' : 'Macho ♂'} • {pet.color}
-                  </div>
+                  <span className="text-slate-400 text-[10px] uppercase font-semibold">Manto / Color:</span>
+                  <div className="font-semibold text-slate-200 truncate">{pet.color}</div>
                 </div>
               </div>
               <div>
-                <span className="text-slate-400 text-[10px] uppercase font-semibold">Microchip Oficial:</span>
-                <div className="font-mono text-indigo-300 font-bold tracking-wider">{pet.microchipNumber}</div>
+                <span className="text-slate-400 text-[10px] uppercase font-semibold">Microchip Oficial (15 dígitos):</span>
+                <div className="font-mono text-indigo-300 font-bold tracking-wider text-sm break-all">{pet.microchipNumber}</div>
               </div>
-              <div>
-                <span className="text-slate-400 text-[10px] uppercase font-semibold">CC.AA. / Registro:</span>
-                <div className="font-medium text-slate-300">{pet.community} (REIAC)</div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="text-slate-400 text-[10px] uppercase font-semibold">CC.AA. / Registro:</span>
+                  <div className="font-medium text-slate-300 truncate">{pet.community} (REIAC)</div>
+                </div>
+                <div>
+                  <span className="text-slate-400 text-[10px] uppercase font-semibold">Seguro RC:</span>
+                  <div className="font-medium text-emerald-400 truncate">{pet.insuranceCompany || 'Ley 7/2023'}</div>
+                </div>
               </div>
             </div>
 
-            <div className="sm:col-span-1 bg-white/5 p-3 rounded-xl border border-white/10 text-center flex flex-col items-center justify-center">
-              <QrCode className="w-10 h-10 text-indigo-400 mb-1" />
+            <div className="sm:col-span-1 bg-white/5 p-3.5 rounded-xl border border-white/10 text-center flex flex-col items-center justify-center">
+              <QrCode className="w-12 h-12 text-indigo-400 mb-1.5" />
               <span className="text-[9px] text-slate-400 uppercase tracking-wider font-mono">
                 ID: {pet.id}
               </span>
-              <span className="text-[9px] text-indigo-300 mt-0.5">Válido en la UE</span>
+              <span className="text-[9px] text-indigo-300 mt-0.5 font-medium">Válido en la UE / REIAC</span>
             </div>
           </div>
         </div>
@@ -217,7 +221,7 @@ export const PetProfileView: React.FC<PetProfileViewProps> = ({
       {/* DETAILED PET PROFILE MAIN GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Basic Info & Health Snapshot */}
-        <div className="space-y-6">
+        <div className="space-y-6 lg:col-span-1">
           <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm text-center">
             <div className="relative inline-block mb-4">
               <img
@@ -280,7 +284,7 @@ export const PetProfileView: React.FC<PetProfileViewProps> = ({
                   <span>{copiedChip ? 'Copiado' : 'Copiar'}</span>
                 </button>
               </div>
-              <div className="font-mono text-sm font-bold text-indigo-950 tracking-wider">
+              <div className="font-mono text-sm font-bold text-indigo-950 tracking-wider break-all">
                 {pet.microchipNumber}
               </div>
               <p className="text-[10px] text-slate-500 mt-1">
@@ -392,7 +396,7 @@ export const PetProfileView: React.FC<PetProfileViewProps> = ({
                 <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
                   Nº de Póliza
                 </div>
-                <div className="text-xs font-mono font-bold text-slate-800 mt-1">
+                <div className="text-xs font-mono font-bold text-slate-800 mt-1 break-all">
                   {pet.insurancePolicyNumber || 'Sin póliza'}
                 </div>
               </div>
@@ -413,7 +417,7 @@ export const PetProfileView: React.FC<PetProfileViewProps> = ({
             <h3 className="text-sm font-bold text-slate-900 mb-2">
               Notas y Observaciones Personales
             </h3>
-            <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100 whitespace-pre-line">
               {pet.notes || 'Sin notas especiales registradas.'}
             </p>
           </div>

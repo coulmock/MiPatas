@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { storageService } from './services/storageService';
+import { authService } from './services/authService';
 import {
   Pet,
   HealthRecord,
@@ -11,6 +12,8 @@ import {
   ActivityLog,
   FamilyMember,
   PetWeightEntry,
+  AuthUser,
+  PlanTier,
 } from './types';
 import { Navbar, NavTab } from './components/Navbar';
 import { Dashboard } from './components/Dashboard';
@@ -25,6 +28,12 @@ import { FamilyView } from './components/FamilyView';
 import { OnboardingModal } from './components/OnboardingModal';
 import { SpanishLawModal } from './components/SpanishLawModal';
 import { ConfirmModal } from './components/ConfirmModal';
+import { DemoBanner } from './components/DemoBanner';
+import { AuthModal } from './components/AuthModal';
+import { PricingModal } from './components/PricingModal';
+import { ProUpsellModal } from './components/ProUpsellModal';
+import { LandingPage } from './components/LandingPage';
+import { ProFeatureKey, planPermissions } from './utils/planPermissions';
 
 interface ConfirmState {
   isOpen: boolean;
@@ -37,7 +46,11 @@ interface ConfirmState {
 }
 
 export default function App() {
-  // Global State
+  // Auth & Subscription state
+  const [authUser, setAuthUser] = useState<AuthUser | null>(authService.getCurrentUser());
+  const [isDemoMode, setIsDemoMode] = useState<boolean>(storageService.isDemoMode());
+
+  // Global App Data State
   const [pets, setPets] = useState<Pet[]>([]);
   const [selectedPetId, setSelectedPetId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<NavTab>('inicio');
@@ -51,9 +64,18 @@ export default function App() {
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [weightHistory, setWeightHistory] = useState<PetWeightEntry[]>([]);
 
-  // Modal triggers
+  // Modals & UI dialogs
   const [showAddPetModal, setShowAddPetModal] = useState(false);
   const [showLawModal, setShowLawModal] = useState(false);
+  const [showPricingModal, setShowPricingModal] = useState(false);
+  const [upsellFeature, setUpsellFeature] = useState<ProFeatureKey | null>(null);
+  const [authModalConfig, setAuthModalConfig] = useState<{
+    isOpen: boolean;
+    mode: 'login' | 'register';
+  }>({
+    isOpen: false,
+    mode: 'register',
+  });
 
   // Generic Confirmation Modal State
   const [confirmModal, setConfirmModal] = useState<ConfirmState>({
@@ -62,6 +84,14 @@ export default function App() {
     description: '',
     onConfirm: () => {},
   });
+
+  // Listen to auth changes
+  useEffect(() => {
+    const unsubscribe = authService.onAuthStateChange((user) => {
+      setAuthUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Initialize storage
   useEffect(() => {
@@ -72,6 +102,7 @@ export default function App() {
   const refreshAllData = () => {
     const allPets = storageService.getPets();
     setPets(allPets);
+    setIsDemoMode(storageService.isDemoMode());
 
     let activeId = storageService.getSelectedPetId();
     if ((!activeId || !allPets.some((p) => p.id === activeId)) && allPets.length > 0) {
@@ -103,6 +134,9 @@ export default function App() {
     setFamilyMembers(storageService.getFamilyMembers());
   };
 
+  // Determine current active plan
+  const planTier: PlanTier = authUser?.plan || (isDemoMode ? 'pro' : 'free');
+
   const handleSelectPet = (petId: string) => {
     storageService.setSelectedPetId(petId);
     setSelectedPetId(petId);
@@ -116,6 +150,33 @@ export default function App() {
     setWeightHistory(storageService.getWeightHistory(petId));
   };
 
+  // Check tab permissions on tab selection
+  const handleSelectTab = (tab: NavTab) => {
+    if (tab === 'ia' && !planPermissions.canAccess('ia', planTier)) {
+      setUpsellFeature('ia');
+      return;
+    }
+    if (tab === 'documentos' && !planPermissions.canAccess('documentos', planTier)) {
+      setUpsellFeature('documentos');
+      return;
+    }
+    if (tab === 'familia' && !planPermissions.canAccess('familia', planTier)) {
+      setUpsellFeature('familia');
+      return;
+    }
+
+    setActiveTab(tab);
+  };
+
+  // Check pet limit before opening Add Pet Modal
+  const handleTriggerOpenAddPet = () => {
+    if (!planPermissions.canAddPet(pets.length, planTier)) {
+      setUpsellFeature('unlimited_pets');
+      return;
+    }
+    setShowAddPetModal(true);
+  };
+
   const handleAddPet = (newPetData: Omit<Pet, 'id'>) => {
     const created = storageService.addPet(newPetData);
     refreshAllData();
@@ -125,8 +186,26 @@ export default function App() {
 
   const handleLoadDemoData = () => {
     storageService.loadDemoData();
+    setIsDemoMode(true);
     refreshAllData();
     setShowAddPetModal(false);
+  };
+
+  const handleExitDemoMode = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: '¿Salir del modo demo?',
+      description:
+        'Se borrarán los datos de ejemplo (Luna y Bruno) y volverás al inicio limpio para registrar tu propia mascota.',
+      confirmLabel: 'Salir del modo demo',
+      variant: 'warning',
+      onConfirm: () => {
+        storageService.exitDemoMode();
+        setIsDemoMode(false);
+        refreshAllData();
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+      },
+    });
   };
 
   const handleUpdatePet = (petId: string, updates: Partial<Pet>) => {
@@ -138,209 +217,321 @@ export default function App() {
     const targetPet = pets.find((p) => p.id === petId);
     setConfirmModal({
       isOpen: true,
-      title: `¿Eliminar ficha de ${targetPet?.name || 'la mascota'}?`,
-      description: `Se eliminará permanentemente la ficha oficial junto con todas sus vacunas, historial médico, medicamentos, citas y documentos asociados.`,
+      title: '¿Eliminar mascota?',
+      description:
+        'Esta acción es irreversible y eliminará definitivamente toda su información, historial de vacunas, tratamientos y documentos asociados.',
       itemName: targetPet?.name,
-      confirmLabel: 'Eliminar Mascota',
+      confirmLabel: 'Eliminar mascota',
       variant: 'danger',
       onConfirm: () => {
         storageService.deletePet(petId);
         refreshAllData();
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
       },
     });
   };
 
-  // Health Card handlers
-  const handleAddHealthRecord = (record: Omit<HealthRecord, 'id'>) => {
-    storageService.addHealthRecord(record);
+  // Plan Management
+  const handleSelectPlan = (newPlan: PlanTier) => {
+    authService.updatePlan(newPlan);
+    const updated = authService.getCurrentUser();
+    setAuthUser(updated);
+  };
+
+  const handleUpgradeToProFromUpsell = () => {
+    authService.updatePlan('pro');
+    const updated = authService.getCurrentUser();
+    setAuthUser(updated);
+    const target = upsellFeature;
+    setUpsellFeature(null);
+    if (target === 'ia') setActiveTab('ia');
+    else if (target === 'documentos') setActiveTab('documentos');
+    else if (target === 'familia') setActiveTab('familia');
+    else if (target === 'unlimited_pets') setShowAddPetModal(true);
+  };
+
+  // Sign out
+  const handleSignOut = async () => {
+    await authService.signOut();
+    setAuthUser(null);
+    if (isDemoMode) {
+      storageService.exitDemoMode();
+      setIsDemoMode(false);
+    }
     refreshAllData();
+  };
+
+  // Medical records handlers
+  const handleAddHealthRecord = (record: Omit<HealthRecord, 'id'>) => {
+    if (!selectedPetId) return;
+    storageService.addHealthRecord({ ...record, petId: selectedPetId });
+    setHealthRecords(storageService.getHealthRecords(selectedPetId));
+    setActivities(storageService.getActivityLogs(selectedPetId));
   };
 
   const handleDeleteHealthRecord = (id: string) => {
-    const target = healthRecords.find((r) => r.id === id);
+    if (!selectedPetId) return;
+    const targetRecord = healthRecords.find((r) => r.id === id);
     setConfirmModal({
       isOpen: true,
       title: '¿Eliminar registro de salud?',
-      description: 'Se eliminará este registro médico del carnet sanitario digital.',
-      itemName: target?.title,
-      confirmLabel: 'Eliminar Registro',
+      description: 'El registro se borrará de la cartilla sanitaria de la mascota.',
+      itemName: targetRecord?.title,
+      confirmLabel: 'Eliminar registro',
       variant: 'danger',
       onConfirm: () => {
         storageService.deleteHealthRecord(id);
-        refreshAllData();
+        setHealthRecords(storageService.getHealthRecords(selectedPetId));
+        setActivities(storageService.getActivityLogs(selectedPetId));
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
       },
     });
   };
 
+  // Weight handlers
   const handleAddWeight = (entry: Omit<PetWeightEntry, 'id'>) => {
-    if (!activePet) return;
-    storageService.addWeightEntry(activePet.id, entry);
-    refreshAllData();
+    if (!selectedPetId) return;
+    storageService.addWeightEntry(selectedPetId, entry);
+    setWeightHistory(storageService.getWeightHistory(selectedPetId));
+    setActivities(storageService.getActivityLogs(selectedPetId));
   };
 
   // Medication handlers
   const handleAddMedication = (med: Omit<Medication, 'id'>) => {
-    storageService.addMedication(med);
-    refreshAllData();
+    if (!selectedPetId) return;
+    storageService.addMedication({ ...med, petId: selectedPetId });
+    setMedications(storageService.getMedications(selectedPetId));
+    setActivities(storageService.getActivityLogs(selectedPetId));
   };
 
   const handleUpdateMedication = (id: string, updates: Partial<Medication>) => {
+    if (!selectedPetId) return;
     storageService.updateMedication(id, updates);
-    refreshAllData();
+    setMedications(storageService.getMedications(selectedPetId));
   };
 
   const handleDeleteMedication = (id: string) => {
-    const target = medications.find((m) => m.id === id);
+    if (!selectedPetId) return;
+    const targetMed = medications.find((m) => m.id === id);
     setConfirmModal({
       isOpen: true,
       title: '¿Eliminar tratamiento?',
-      description: 'Se eliminará este medicamento del plan de tratamientos.',
-      itemName: target?.name,
-      confirmLabel: 'Eliminar Medicamento',
+      description: 'Se eliminará la pauta farmacológica y su historial de administración.',
+      itemName: targetMed?.name,
+      confirmLabel: 'Eliminar tratamiento',
       variant: 'danger',
       onConfirm: () => {
         storageService.deleteMedication(id);
-        refreshAllData();
+        setMedications(storageService.getMedications(selectedPetId));
+        setDoseLogs(storageService.getDoseLogs(selectedPetId));
+        setActivities(storageService.getActivityLogs(selectedPetId));
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
       },
     });
   };
 
-  const handleRecordDose = (petId: string, medId: string, by: string, note?: string) => {
-    storageService.recordDose(petId, medId, by, note);
-    refreshAllData();
+  const handleRecordDose = (
+    petId: string,
+    medicationId: string,
+    administeredBy: string,
+    notes?: string
+  ) => {
+    const targetPetId = petId || selectedPetId;
+    if (!targetPetId) return;
+    storageService.recordDose(
+      targetPetId,
+      medicationId,
+      administeredBy,
+      notes
+    );
+    setDoseLogs(storageService.getDoseLogs(targetPetId));
+    setActivities(storageService.getActivityLogs(targetPetId));
+    setMedications(storageService.getMedications(targetPetId));
   };
 
-  // Calendar / Agenda handlers
+  // Calendar Event handlers
   const handleAddEvent = (event: Omit<CalendarEvent, 'id'>) => {
-    storageService.addCalendarEvent(event);
-    refreshAllData();
+    if (!selectedPetId) return;
+    storageService.addCalendarEvent({ ...event, petId: selectedPetId });
+    setCalendarEvents(storageService.getCalendarEvents(selectedPetId));
+    setActivities(storageService.getActivityLogs(selectedPetId));
   };
 
   const handleDeleteEvent = (id: string) => {
-    const target = calendarEvents.find((e) => e.id === id);
+    if (!selectedPetId) return;
+    const targetEvent = calendarEvents.find((e) => e.id === id);
     setConfirmModal({
       isOpen: true,
       title: '¿Eliminar cita de la agenda?',
-      description: 'Se eliminará esta cita o revisión programada.',
-      itemName: target?.title,
-      confirmLabel: 'Eliminar Cita',
+      description: 'La cita se eliminará del calendario de citas veterinarias.',
+      itemName: targetEvent?.title,
+      confirmLabel: 'Eliminar cita',
       variant: 'danger',
       onConfirm: () => {
         storageService.deleteCalendarEvent(id);
-        refreshAllData();
+        setCalendarEvents(storageService.getCalendarEvents(selectedPetId));
+        setActivities(storageService.getActivityLogs(selectedPetId));
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
       },
     });
   };
 
   const handleToggleEvent = (id: string) => {
+    if (!selectedPetId) return;
     storageService.toggleCalendarEvent(id);
-    refreshAllData();
+    setCalendarEvents(storageService.getCalendarEvents(selectedPetId));
   };
 
   // Reminder handlers
-  const handleAddReminder = (rem: Omit<Reminder, 'id'>) => {
-    storageService.addReminder(rem);
-    refreshAllData();
+  const handleAddReminder = (reminder: Omit<Reminder, 'id'>) => {
+    if (!selectedPetId) return;
+    storageService.addReminder({ ...reminder, petId: selectedPetId });
+    setReminders(storageService.getReminders(selectedPetId));
   };
 
   const handleToggleReminder = (id: string) => {
+    if (!selectedPetId) return;
     storageService.toggleReminder(id);
-    refreshAllData();
+    setReminders(storageService.getReminders(selectedPetId));
   };
 
   const handleDeleteReminder = (id: string) => {
-    const target = reminders.find((r) => r.id === id);
+    if (!selectedPetId) return;
+    const targetReminder = reminders.find((r) => r.id === id);
     setConfirmModal({
       isOpen: true,
       title: '¿Eliminar recordatorio?',
-      description: 'Se eliminará este aviso preventivo de la agenda periódica.',
-      itemName: target?.title,
-      confirmLabel: 'Eliminar Recordatorio',
+      description: 'Dejarás de recibir avisos para esta pauta.',
+      itemName: targetReminder?.title,
+      confirmLabel: 'Eliminar recordatorio',
       variant: 'danger',
       onConfirm: () => {
         storageService.deleteReminder(id);
-        refreshAllData();
+        setReminders(storageService.getReminders(selectedPetId));
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
       },
     });
   };
 
   // Document handlers
   const handleAddDocument = (doc: Omit<PetDocument, 'id'>) => {
-    storageService.addDocument(doc);
-    refreshAllData();
+    if (!selectedPetId) return;
+    storageService.addDocument({ ...doc, petId: selectedPetId });
+    setDocuments(storageService.getDocuments(selectedPetId));
+    setActivities(storageService.getActivityLogs(selectedPetId));
   };
 
   const handleDeleteDocument = (id: string) => {
-    const target = documents.find((d) => d.id === id);
+    if (!selectedPetId) return;
+    const targetDoc = documents.find((d) => d.id === id);
     setConfirmModal({
       isOpen: true,
-      title: '¿Eliminar documento de la bóveda?',
-      description: 'Se eliminará este informe o receta veterinaria de los archivos.',
-      itemName: target?.title,
-      confirmLabel: 'Eliminar Documento',
+      title: '¿Eliminar documento clínico?',
+      description: 'El archivo se borrará permanentemente de la bóveda de documentos.',
+      itemName: targetDoc?.title,
+      confirmLabel: 'Eliminar documento',
       variant: 'danger',
       onConfirm: () => {
         storageService.deleteDocument(id);
-        refreshAllData();
+        setDocuments(storageService.getDocuments(selectedPetId));
+        setActivities(storageService.getActivityLogs(selectedPetId));
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
       },
     });
   };
 
-  // Family handlers
+  // Family Member handlers
   const handleAddFamilyMember = (member: Omit<FamilyMember, 'id'>) => {
     storageService.addFamilyMember(member);
-    refreshAllData();
+    setFamilyMembers(storageService.getFamilyMembers());
   };
 
   const handleDeleteFamilyMember = (id: string) => {
-    const target = familyMembers.find((m) => m.id === id);
+    const targetMember = familyMembers.find((m) => m.id === id);
     setConfirmModal({
       isOpen: true,
-      title: '¿Eliminar cuidador / familiar?',
-      description: 'Se desvinculará a este miembro del equipo de cuidados de la mascota.',
-      itemName: target?.name,
-      confirmLabel: 'Eliminar Miembro',
+      title: '¿Eliminar cuidador del equipo?',
+      description: 'El usuario ya no tendrá acceso al registro compartido de tomas ni al panel colaborativo.',
+      itemName: targetMember?.name,
+      confirmLabel: 'Eliminar cuidador',
       variant: 'danger',
       onConfirm: () => {
-        storageService.deleteFamilyMember(id);
-        refreshAllData();
+        storageService.removeFamilyMember(id);
+        setFamilyMembers(storageService.getFamilyMembers());
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
       },
     });
   };
 
+  // Active pet reference
   const activePet = pets.find((p) => p.id === selectedPetId) || pets[0];
 
-  // If no pets registered, show the welcoming onboarding interface
-  if (!activePet) {
+  // If there are no pets AND no authenticated user AND not in demo mode -> Show Public Landing Page
+  const shouldShowLanding = !authUser && !isDemoMode && pets.length === 0;
+
+  if (shouldShowLanding) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <OnboardingModal
-          isOpen={true}
-          isFirstTime={true}
-          onClose={() => {}}
-          onComplete={handleAddPet}
-          onLoadDemoData={handleLoadDemoData}
+      <>
+        <LandingPage
+          onOpenLogin={() => setAuthModalConfig({ isOpen: true, mode: 'login' })}
+          onOpenRegister={() => setAuthModalConfig({ isOpen: true, mode: 'register' })}
+          onLaunchDemo={handleLoadDemoData}
+          onOpenLawModal={() => setShowLawModal(true)}
         />
-      </div>
+
+        <AuthModal
+          isOpen={authModalConfig.isOpen}
+          initialMode={authModalConfig.mode}
+          onClose={() => setAuthModalConfig({ isOpen: false, mode: 'register' })}
+          onSuccess={(user, isNewRegistration) => {
+            setAuthUser(user);
+            setAuthModalConfig({ isOpen: false, mode: 'register' });
+            if (isNewRegistration || pets.length === 0) {
+              setShowAddPetModal(true);
+            }
+          }}
+        />
+
+        {showLawModal && (
+          <SpanishLawModal
+            pet={activePet}
+            onClose={() => setShowLawModal(false)}
+          />
+        )}
+      </>
     );
   }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-indigo-100 selection:text-indigo-900">
-      {/* Top Main Navigation Bar */}
+      {/* Demo Mode Notice Banner */}
+      {isDemoMode && (
+        <DemoBanner
+          onExitDemo={handleExitDemoMode}
+          onCreateAccount={() => setAuthModalConfig({ isOpen: true, mode: 'register' })}
+        />
+      )}
+
+      {/* Main Top Navigation */}
       <Navbar
         currentTab={activeTab}
-        onSelectTab={setActiveTab}
+        onSelectTab={handleSelectTab}
         pets={pets}
         selectedPetId={selectedPetId}
         onSelectPet={handleSelectPet}
-        onOpenAddPet={() => setShowAddPetModal(true)}
+        onOpenAddPet={handleTriggerOpenAddPet}
         onOpenLawModal={() => setShowLawModal(true)}
+        planTier={planTier}
+        authUser={authUser}
+        isDemoMode={isDemoMode}
+        onOpenPricing={() => setShowPricingModal(true)}
+        onSignOut={handleSignOut}
+        onOpenAuthModal={() => setAuthModalConfig({ isOpen: true, mode: 'login' })}
       />
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-20 md:pb-12">
-        {activeTab === 'inicio' && (
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-28 md:pb-12">
+        {activeTab === 'inicio' && activePet && (
           <Dashboard
             pet={activePet}
             allPets={pets}
@@ -351,44 +542,39 @@ export default function App() {
             doseLogs={doseLogs}
             recentActivities={activities}
             familyMembers={familyMembers}
-            onNavigate={setActiveTab}
+            onNavigate={handleSelectTab}
             onRecordDose={handleRecordDose}
             onToggleReminder={handleToggleReminder}
-            onOpenAddEventModal={() => {
-              setActiveTab('agenda');
-            }}
-            onOpenAddHealthModal={() => {
-              setActiveTab('salud');
-            }}
-            onOpenWeightModal={() => {
-              setActiveTab('salud');
-            }}
+            onOpenAddEventModal={() => handleSelectTab('agenda')}
+            onOpenAddHealthModal={() => handleSelectTab('salud')}
+            onOpenWeightModal={() => handleSelectTab('salud')}
             onOpenLawModal={() => setShowLawModal(true)}
           />
         )}
 
-        {activeTab === 'perfil' && (
+        {activeTab === 'perfil' && activePet && (
           <PetProfileView
             pet={activePet}
             allPets={pets}
             onSelectPet={handleSelectPet}
-            onOpenAddPet={() => setShowAddPetModal(true)}
+            onOpenAddPet={handleTriggerOpenAddPet}
             onUpdatePet={handleUpdatePet}
             onDeletePet={handleDeletePet}
             weightHistory={weightHistory}
-            onOpenWeightModal={() => setActiveTab('salud')}
+            onOpenWeightModal={() => handleSelectTab('salud')}
             onOpenLawModal={() => setShowLawModal(true)}
           />
         )}
 
-        {activeTab === 'salud' && (
+        {activeTab === 'salud' && activePet && (
           <HealthCardView
             pet={activePet}
             healthRecords={healthRecords}
+            weightHistory={weightHistory}
             onAddRecord={handleAddHealthRecord}
             onDeleteRecord={handleDeleteHealthRecord}
-            weightHistory={weightHistory}
             onAddWeight={handleAddWeight}
+            onOpenLawModal={() => setShowLawModal(true)}
           />
         )}
 
@@ -470,6 +656,38 @@ export default function App() {
           onClose={() => setShowLawModal(false)}
         />
       )}
+
+      {/* Pricing and Subscription Modal */}
+      <PricingModal
+        isOpen={showPricingModal}
+        currentPlan={planTier}
+        onClose={() => setShowPricingModal(false)}
+        onSelectPlan={handleSelectPlan}
+      />
+
+      {/* Pro Feature Upsell Modal */}
+      {upsellFeature && (
+        <ProUpsellModal
+          isOpen={!!upsellFeature}
+          featureKey={upsellFeature}
+          onClose={() => setUpsellFeature(null)}
+          onUpgradeToPro={handleUpgradeToProFromUpsell}
+        />
+      )}
+
+      {/* Auth Modal (Login / Register) */}
+      <AuthModal
+        isOpen={authModalConfig.isOpen}
+        initialMode={authModalConfig.mode}
+        onClose={() => setAuthModalConfig({ isOpen: false, mode: 'register' })}
+        onSuccess={(user, isNewRegistration) => {
+          setAuthUser(user);
+          setAuthModalConfig({ isOpen: false, mode: 'register' });
+          if (isNewRegistration || pets.length === 0) {
+            setShowAddPetModal(true);
+          }
+        }}
+      />
 
       {/* Global Confirmation Modal */}
       <ConfirmModal

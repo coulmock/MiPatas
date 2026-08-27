@@ -27,6 +27,7 @@ interface HealthCardViewProps {
   onDeleteRecord: (id: string) => void;
   weightHistory: PetWeightEntry[];
   onAddWeight: (entry: Omit<PetWeightEntry, 'id'>) => void;
+  onOpenLawModal?: () => void;
 }
 
 const CATEGORY_CONFIG: Record<

@@ -169,8 +169,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="space-y-6 pb-16">
-      {/* SECTION 1: SLEEK HERO STATUS PANEL */}
-      <div className="bg-slate-900 rounded-2xl p-6 text-white border border-slate-800 shadow-sm relative overflow-hidden">
+      {/* SECTION 1: WARM & FRIENDLY HERO STATUS PANEL */}
+      <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-amber-950/60 rounded-3xl p-6 text-white border-2 border-amber-500/20 shadow-md relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
           {/* Pet Info & Status Badge */}
           <div className="flex items-center space-x-5">
@@ -181,38 +181,38 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <img
                 src={pet.photoUrl}
                 alt={pet.name}
-                className="w-20 h-20 rounded-xl object-cover border border-slate-700 group-hover:border-indigo-400 transition-colors"
+                className="w-20 h-20 rounded-2xl object-cover border-2 border-amber-400 group-hover:scale-105 transition-all shadow-md"
               />
-              <span className="absolute -bottom-1 -right-1 px-1.5 py-0.5 bg-indigo-600 text-white text-[10px] font-semibold rounded-md">
-                {pet.species === 'perro' ? 'Perro' : 'Gato'}
+              <span className="absolute -bottom-1 -right-1 px-2 py-0.5 bg-amber-500 text-white text-[10px] font-black rounded-lg shadow-xs">
+                {pet.species === 'perro' ? 'Perro 🐶' : 'Gato 🐱'}
               </span>
             </div>
 
             <div>
               <div className="flex flex-wrap items-center gap-2.5">
-                <h1 className="text-2xl font-bold tracking-tight text-white">{pet.name}</h1>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-medium border border-emerald-500/30">
-                  <CheckCircle2 className="w-3 h-3 mr-1" />
+                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">{pet.name}</h1>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/40">
+                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
                   Salud al día
                 </span>
               </div>
 
-              <p className="text-sm text-slate-400 mt-1">
+              <p className="text-sm text-slate-300 mt-1 font-medium">
                 {pet.breed} • {getAgeString(pet.birthDate)} • {pet.sex === 'hembra' ? 'Hembra' : 'Macho'}
               </p>
 
               <div className="flex flex-wrap items-center gap-2 mt-3 text-xs">
-                <div className="flex items-center space-x-1.5 bg-slate-800 px-3 py-1 rounded-lg text-slate-300">
-                  <Scale className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>{pet.weightKg} kg</span>
+                <div className="flex items-center space-x-1.5 bg-slate-800/90 px-3 py-1.5 rounded-xl text-slate-200 border border-slate-700">
+                  <Scale className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="font-bold">{pet.weightKg} kg</span>
                 </div>
-                <div className="flex items-center space-x-1.5 bg-slate-800 px-3 py-1 rounded-lg text-slate-300">
-                  <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
-                  <span className="font-mono text-[11px]">REIAC: {pet.microchipNumber?.slice(-6) || 'Activo'}</span>
+                <div className="flex items-center space-x-1.5 bg-slate-800/90 px-3 py-1.5 rounded-xl text-slate-200 border border-slate-700">
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="font-mono text-[11px] font-bold">REIAC: {pet.microchipNumber?.slice(-6) || 'Activo'}</span>
                 </div>
-                <div className="hidden sm:flex items-center space-x-1.5 bg-slate-800 px-3 py-1 rounded-lg text-slate-300">
-                  <Building2 className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>{pet.community}</span>
+                <div className="hidden sm:flex items-center space-x-1.5 bg-slate-800/90 px-3 py-1.5 rounded-xl text-slate-200 border border-slate-700">
+                  <Building2 className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="font-medium">{pet.community}</span>
                 </div>
               </div>
             </div>
@@ -223,7 +223,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <button
               id="dash-quick-ai-btn"
               onClick={() => onNavigate('ia')}
-              className="flex-1 md:flex-none flex items-center justify-center space-x-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
+              className="flex-1 md:flex-none flex items-center justify-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-2xl text-xs font-black shadow-md shadow-amber-500/25 transition-all"
             >
               <Sparkles className="w-4 h-4" />
               <span>Consultar MiPatas AI</span>
@@ -233,18 +233,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <button
                 id="dash-quick-appt-btn"
                 onClick={onOpenAddEventModal}
-                className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg transition-colors border border-slate-700"
+                className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition-colors border border-slate-700"
               >
-                <Calendar className="w-3.5 h-3.5 text-indigo-300" />
+                <Calendar className="w-3.5 h-3.5 text-amber-400" />
                 <span>+ Cita</span>
               </button>
 
               <button
                 id="dash-quick-weight-btn"
                 onClick={onOpenWeightModal}
-                className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg transition-colors border border-slate-700"
+                className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition-colors border border-slate-700"
               >
-                <Scale className="w-3.5 h-3.5 text-indigo-300" />
+                <Scale className="w-3.5 h-3.5 text-amber-400" />
                 <span>+ Peso</span>
               </button>
             </div>
@@ -288,93 +288,108 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       )}
 
-      {/* STATS OVERVIEW CARDS (SLEEK INTERFACE 3/4-COL GRID) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* STATS OVERVIEW CARDS (WARM FRIENDLY 4-COL GRID) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Stat 1: Próxima Cita / Evento */}
         <div
           onClick={() => onNavigate('agenda')}
-          className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm cursor-pointer hover:border-indigo-300 transition-colors flex flex-col justify-between"
+          className="bg-white p-6 rounded-3xl border-2 border-amber-100/90 shadow-2xs cursor-pointer hover:border-amber-400 hover:shadow-md transition-all flex flex-col justify-between group"
         >
           <div>
-            <h3 className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">
-              Próxima Cita
-            </h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-slate-500 text-xs font-black uppercase tracking-wider">
+                Próxima Cita
+              </h3>
+              <div className="w-7 h-7 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
+                <Calendar className="w-3.5 h-3.5" />
+              </div>
+            </div>
             {nextEvent ? (
               <div>
                 <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-xl font-bold text-slate-900 truncate">
+                  <span className="text-lg font-black text-slate-900 truncate">
                     {nextEvent.title}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-1">
-                  <Clock className="w-3.5 h-3.5 text-indigo-600" />
+                <p className="text-xs text-slate-600 font-medium flex items-center gap-1.5 mt-1">
+                  <Clock className="w-3.5 h-3.5 text-amber-600" />
                   <span>{nextEvent.date} {nextEvent.time ? `(${nextEvent.time})` : ''}</span>
                 </p>
               </div>
             ) : (
               <div>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-bold text-slate-900">0 citas</span>
-                  <span className="text-xs font-medium text-slate-400">Al día</span>
+                  <span className="text-2xl font-black text-slate-900">0 citas</span>
+                  <span className="text-xs font-bold text-slate-400">Al día</span>
                 </div>
                 <p className="text-xs text-slate-500 mt-1">Sin eventos programados hoy.</p>
               </div>
             )}
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-indigo-600">
+          <div className="mt-4 pt-3 border-t border-amber-50 flex items-center justify-between text-xs font-black text-amber-600 group-hover:text-amber-700">
             <span>Ver agenda</span>
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </div>
         </div>
 
         {/* Stat 2: Vacunas */}
         <div
           onClick={() => onNavigate('salud')}
-          className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm cursor-pointer hover:border-indigo-300 transition-colors flex flex-col justify-between"
+          className="bg-white p-6 rounded-3xl border-2 border-amber-100/90 shadow-2xs cursor-pointer hover:border-amber-400 hover:shadow-md transition-all flex flex-col justify-between group"
         >
           <div>
-            <h3 className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">
-              Vacunación
-            </h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-slate-500 text-xs font-black uppercase tracking-wider">
+                Vacunación
+              </h3>
+              <div className="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <HeartPulse className="w-3.5 h-3.5" />
+              </div>
+            </div>
             {nextVaccine ? (
               <div>
                 <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-xl font-bold text-slate-900 truncate">
+                  <span className="text-lg font-black text-slate-900 truncate">
                     {nextVaccine.title}
                   </span>
                 </div>
-                <p className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+                <p className="text-xs text-emerald-600 font-bold flex items-center gap-1">
                   <span>Vence: {nextVaccine.dueDate}</span>
                 </p>
               </div>
             ) : (
               <div>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-bold text-slate-900">100%</span>
-                  <span className="text-xs font-medium text-emerald-600">Completas</span>
+                  <span className="text-2xl font-black text-emerald-600">100%</span>
+                  <span className="text-xs font-bold text-emerald-600">Completas</span>
                 </div>
                 <p className="text-xs text-slate-500 mt-1">Todas las vacunas al día.</p>
               </div>
             )}
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-indigo-600">
+          <div className="mt-4 pt-3 border-t border-amber-50 flex items-center justify-between text-xs font-black text-amber-600 group-hover:text-amber-700">
             <span>Carnet de salud</span>
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </div>
         </div>
 
         {/* Stat 3: Tratamientos */}
         <div
           onClick={() => onNavigate('medicamentos')}
-          className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm cursor-pointer hover:border-indigo-300 transition-colors flex flex-col justify-between"
+          className="bg-white p-6 rounded-3xl border-2 border-amber-100/90 shadow-2xs cursor-pointer hover:border-amber-400 hover:shadow-md transition-all flex flex-col justify-between group"
         >
           <div>
-            <h3 className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">
-              Tratamientos Activos
-            </h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-slate-500 text-xs font-black uppercase tracking-wider">
+                Tratamientos
+              </h3>
+              <div className="w-7 h-7 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center">
+                <Pill className="w-3.5 h-3.5" />
+              </div>
+            </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-slate-900">{activeMedications.length}</span>
-              <span className={`text-xs font-medium ${activeMedications.length > 0 ? 'text-amber-600' : 'text-slate-400'}`}>
+              <span className="text-3xl font-black text-slate-900">{activeMedications.length}</span>
+              <span className={`text-xs font-black ${activeMedications.length > 0 ? 'text-amber-600' : 'text-slate-400'}`}>
                 {activeMedications.length > 0 ? 'En curso' : 'Sin pauta'}
               </span>
             </div>
@@ -384,30 +399,35 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 : 'Ningún medicamento activo.'}
             </p>
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-indigo-600">
+          <div className="mt-4 pt-3 border-t border-amber-50 flex items-center justify-between text-xs font-black text-amber-600 group-hover:text-amber-700">
             <span>Gestionar tomas</span>
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </div>
         </div>
 
         {/* Stat 4: Peso & Condición */}
         <div
           onClick={onOpenWeightModal}
-          className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm cursor-pointer hover:border-indigo-300 transition-colors flex flex-col justify-between"
+          className="bg-white p-6 rounded-3xl border-2 border-amber-100/90 shadow-2xs cursor-pointer hover:border-amber-400 hover:shadow-md transition-all flex flex-col justify-between group"
         >
           <div>
-            <h3 className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">
-              Peso & Condición
-            </h3>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-slate-900">{pet.weightKg} kg</span>
-              <span className="text-xs font-medium text-indigo-600">Ideal</span>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-slate-500 text-xs font-black uppercase tracking-wider">
+                Peso & Condición
+              </h3>
+              <div className="w-7 h-7 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
+                <Scale className="w-3.5 h-3.5" />
+              </div>
             </div>
-            <p className="text-xs text-slate-500 mt-1">Escala BCS 5/9 óptima.</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-black text-slate-900">{pet.weightKg} kg</span>
+              <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">Ideal</span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1 font-medium">Escala BCS 5/9 óptima.</p>
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-indigo-600">
+          <div className="mt-4 pt-3 border-t border-amber-50 flex items-center justify-between text-xs font-black text-amber-600 group-hover:text-amber-700">
             <span>Ver evolución</span>
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </div>
         </div>
       </div>
