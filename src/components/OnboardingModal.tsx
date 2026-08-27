@@ -8,15 +8,18 @@ import {
   X,
   Check,
   FileCheck2,
+  Sparkles,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Pet, PetSpecies, PetSex } from '../types';
 import { SPANISH_COMMUNITIES } from '../data/initialData';
 
-interface OnboardingModalProps {
+export interface OnboardingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSavePet: (petData: Omit<Pet, 'id'>) => void;
+  onSavePet?: (petData: Omit<Pet, 'id'>) => void;
+  onComplete?: (petData: Omit<Pet, 'id'>) => void;
+  onLoadDemoData?: () => void;
   isFirstTime?: boolean;
 }
 
@@ -47,6 +50,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   isOpen,
   onClose,
   onSavePet,
+  onComplete,
+  onLoadDemoData,
   isFirstTime = false,
 }) => {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -75,6 +80,14 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const [notes, setNotes] = useState('');
 
   if (!isOpen) return null;
+
+  const handleSave = (finalPet: Omit<Pet, 'id'>) => {
+    if (onComplete) {
+      onComplete(finalPet);
+    } else if (onSavePet) {
+      onSavePet(finalPet);
+    }
+  };
 
   const handleNext = () => {
     if (step === 1) {
@@ -105,10 +118,9 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         community,
       };
 
-      onSavePet(finalPet);
+      handleSave(finalPet);
       setStep(4);
 
-      // Trigger Confetti
       try {
         confetti({
           particleCount: 80,
@@ -122,15 +134,22 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-      <div className="bg-white rounded-2xl shadow-xl max-w-xl w-full overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-200">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="onboarding-modal-title"
+    >
+      <div className="bg-white rounded-2xl shadow-xl max-w-xl w-full overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-200">
         {/* Modal Header */}
         <div className="px-6 pt-6 pb-4 bg-slate-900 text-white relative">
           {!isFirstTime && step !== 4 && (
             <button
               id="close-onboarding-btn"
+              type="button"
               onClick={onClose}
               className="absolute top-5 right-5 p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+              aria-label="Cerrar modal de registro"
             >
               <X className="w-4 h-4" />
             </button>
@@ -140,7 +159,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             <PawPrint className="w-4 h-4 text-indigo-400" />
             <span>{isFirstTime ? 'Bienvenido a MiPatas España' : 'Nueva Mascota'}</span>
           </div>
-          <h2 className="text-xl font-bold tracking-tight">
+          <h2 id="onboarding-modal-title" className="text-xl font-bold tracking-tight">
             {step === 1 && '1. Identidad de tu compañero'}
             {step === 2 && '2. Microchip y Registro Oficial'}
             {step === 3 && '3. Veterinario y Seguro Obligatorio'}
@@ -154,7 +173,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           </p>
 
           {/* Stepper Dots */}
-          <div className="flex items-center space-x-2 mt-4">
+          <div className="flex items-center space-x-2 mt-4" aria-hidden="true">
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
@@ -175,6 +194,25 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           {/* STEP 1 */}
           {step === 1 && (
             <div className="space-y-4">
+              {/* Optional Demo button banner on first time */}
+              {onLoadDemoData && (
+                <div className="p-3 rounded-xl bg-indigo-50/80 border border-indigo-100 flex items-center justify-between">
+                  <div className="flex items-center space-x-2.5">
+                    <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+                    <span className="text-xs text-indigo-950">
+                      ¿Quieres explorar la app primero?
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onLoadDemoData}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50 transition-colors shadow-2xs"
+                  >
+                    Cargar datos demo
+                  </button>
+                </div>
+              )}
+
               {/* Species selector */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
@@ -195,7 +233,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                           : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                       }`}
                     >
-                      <span className="text-xl mb-1">
+                      <span className="text-xl mb-1" aria-hidden="true">
                         {sp === 'perro' ? '🐕' : sp === 'gato' ? '🐈' : '🐾'}
                       </span>
                       <span className="capitalize">{sp}</span>
@@ -206,7 +244,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
               {/* Name */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                <label htmlFor="pet-name-input" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                   Nombre de la mascota *
                 </label>
                 <input
@@ -222,7 +260,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
               {/* Breed */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                <label htmlFor="pet-breed-input" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                   Raza
                 </label>
                 <input
@@ -252,10 +290,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               {/* Grid: BirthDate & Sex & Weight */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  <label htmlFor="pet-birth-input" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                     Fecha Nacimiento
                   </label>
                   <input
+                    id="pet-birth-input"
                     type="date"
                     value={birthDate}
                     onChange={(e) => setBirthDate(e.target.value)}
@@ -264,10 +303,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  <label htmlFor="pet-sex-input" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                     Sexo
                   </label>
                   <select
+                    id="pet-sex-input"
                     value={sex}
                     onChange={(e) => setSex(e.target.value as PetSex)}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none bg-white"
@@ -278,10 +318,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  <label htmlFor="pet-weight-input" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                     Peso (kg)
                   </label>
                   <input
+                    id="pet-weight-input"
                     type="number"
                     step="0.1"
                     min="0.5"
@@ -296,10 +337,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               {/* Color & Photo URL */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  <label htmlFor="pet-color-input" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                     Color / Manto
                   </label>
                   <input
+                    id="pet-color-input"
                     type="text"
                     placeholder="Ej. Canela, Atigrado, Negro..."
                     value={color}
@@ -308,10 +350,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  <label htmlFor="pet-photo-input" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                     Foto (URL o muestra)
                   </label>
                   <input
+                    id="pet-photo-input"
                     type="text"
                     placeholder="https://..."
                     value={photoUrl}
@@ -337,7 +380,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                <label htmlFor="pet-microchip-input" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                   Número de Microchip (15 dígitos)
                 </label>
                 <input
@@ -361,10 +404,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                <label htmlFor="pet-community-select" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                   Comunidad Autónoma de Residencia
                 </label>
                 <select
+                  id="pet-community-select"
                   value={community}
                   onChange={(e) => setCommunity(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none bg-white"
@@ -414,10 +458,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                <label htmlFor="pet-vet-clinic" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                   Clínica Veterinaria de Cabecera *
                 </label>
                 <input
+                  id="pet-vet-clinic"
                   type="text"
                   placeholder="Ej. Hospital Veterinario San Antón"
                   value={vetClinicName}
@@ -428,10 +473,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  <label htmlFor="pet-vet-doctor" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                     Veterinario/a habitual
                   </label>
                   <input
+                    id="pet-vet-doctor"
                     type="text"
                     placeholder="Ej. Dra. Elena Santos"
                     value={vetDoctorName}
@@ -440,10 +486,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  <label htmlFor="pet-vet-phone" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                     Teléfono Urgencias Vet
                   </label>
                   <input
+                    id="pet-vet-phone"
                     type="text"
                     placeholder="+34 912 345 678"
                     value={vetPhone}
@@ -455,10 +502,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  <label htmlFor="pet-insurance-comp" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                     Compañía Aseguradora
                   </label>
                   <input
+                    id="pet-insurance-comp"
                     type="text"
                     placeholder="Ej. Mapfre, Santalucía, Barkibu..."
                     value={insuranceCompany}
@@ -467,10 +515,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  <label htmlFor="pet-insurance-policy" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                     Nº de Póliza
                   </label>
                   <input
+                    id="pet-insurance-policy"
                     type="text"
                     placeholder="POL-12345-RC"
                     value={insurancePolicyNumber}
@@ -481,10 +530,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                <label htmlFor="pet-notes" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                   Notas adicionales sobre la mascota
                 </label>
                 <textarea
+                  id="pet-notes"
                   rows={2}
                   placeholder="Alergias conocidas, hábitos, miedos, etc."
                   value={notes}

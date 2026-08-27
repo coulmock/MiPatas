@@ -422,9 +422,14 @@ export const PetProfileView: React.FC<PetProfileViewProps> = ({
 
       {/* EDIT PET MODAL */}
       {isEditing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl shadow-xl max-w-xl w-full p-6 max-h-[85vh] overflow-y-auto border border-slate-200 animate-in fade-in zoom-in duration-150">
-            <h3 className="text-base font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-pet-modal-title"
+        >
+          <div className="bg-white rounded-2xl shadow-xl max-w-xl w-full p-6 max-h-[85vh] overflow-y-auto border border-slate-200 animate-in zoom-in-95 duration-150">
+            <h3 id="edit-pet-modal-title" className="text-base font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100">
               Editar Ficha de {pet.name}
             </h3>
 
@@ -563,10 +568,8 @@ export const PetProfileView: React.FC<PetProfileViewProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirm(`¿Seguro que deseas eliminar la ficha de ${pet.name}?`)) {
-                      onDeletePet(pet.id);
-                      setIsEditing(false);
-                    }
+                    onDeletePet(pet.id);
+                    setIsEditing(false);
                   }}
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-1 transition-colors"
                 >

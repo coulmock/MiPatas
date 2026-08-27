@@ -24,6 +24,17 @@ import { AiAssistantView } from './components/AiAssistantView';
 import { FamilyView } from './components/FamilyView';
 import { OnboardingModal } from './components/OnboardingModal';
 import { SpanishLawModal } from './components/SpanishLawModal';
+import { ConfirmModal } from './components/ConfirmModal';
+
+interface ConfirmState {
+  isOpen: boolean;
+  title: string;
+  description: string;
+  itemName?: string;
+  confirmLabel?: string;
+  variant?: 'danger' | 'warning' | 'info';
+  onConfirm: () => void;
+}
 
 export default function App() {
   // Global State
@@ -43,9 +54,14 @@ export default function App() {
   // Modal triggers
   const [showAddPetModal, setShowAddPetModal] = useState(false);
   const [showLawModal, setShowLawModal] = useState(false);
-  const [showDirectAddEventModal, setShowDirectAddEventModal] = useState(false);
-  const [showDirectAddHealthModal, setShowDirectAddHealthModal] = useState(false);
-  const [showDirectWeightModal, setShowDirectWeightModal] = useState(false);
+
+  // Generic Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState<ConfirmState>({
+    isOpen: false,
+    title: '',
+    description: '',
+    onConfirm: () => {},
+  });
 
   // Initialize storage
   useEffect(() => {
@@ -58,7 +74,7 @@ export default function App() {
     setPets(allPets);
 
     let activeId = storageService.getSelectedPetId();
-    if (!activeId && allPets.length > 0) {
+    if ((!activeId || !allPets.some((p) => p.id === activeId)) && allPets.length > 0) {
       activeId = allPets[0].id;
       storageService.setSelectedPetId(activeId);
     }
@@ -73,6 +89,15 @@ export default function App() {
       setDoseLogs(storageService.getDoseLogs(activeId));
       setActivities(storageService.getActivityLogs(activeId));
       setWeightHistory(storageService.getWeightHistory(activeId));
+    } else {
+      setHealthRecords([]);
+      setMedications([]);
+      setCalendarEvents([]);
+      setReminders([]);
+      setDocuments([]);
+      setDoseLogs([]);
+      setActivities([]);
+      setWeightHistory([]);
     }
 
     setFamilyMembers(storageService.getFamilyMembers());
@@ -98,14 +123,31 @@ export default function App() {
     setShowAddPetModal(false);
   };
 
+  const handleLoadDemoData = () => {
+    storageService.loadDemoData();
+    refreshAllData();
+    setShowAddPetModal(false);
+  };
+
   const handleUpdatePet = (petId: string, updates: Partial<Pet>) => {
     storageService.updatePet(petId, updates);
     refreshAllData();
   };
 
   const handleDeletePet = (petId: string) => {
-    storageService.deletePet(petId);
-    refreshAllData();
+    const targetPet = pets.find((p) => p.id === petId);
+    setConfirmModal({
+      isOpen: true,
+      title: `¿Eliminar ficha de ${targetPet?.name || 'la mascota'}?`,
+      description: `Se eliminará permanentemente la ficha oficial junto con todas sus vacunas, historial médico, medicamentos, citas y documentos asociados.`,
+      itemName: targetPet?.name,
+      confirmLabel: 'Eliminar Mascota',
+      variant: 'danger',
+      onConfirm: () => {
+        storageService.deletePet(petId);
+        refreshAllData();
+      },
+    });
   };
 
   // Health Card handlers
@@ -115,8 +157,19 @@ export default function App() {
   };
 
   const handleDeleteHealthRecord = (id: string) => {
-    storageService.deleteHealthRecord(id);
-    refreshAllData();
+    const target = healthRecords.find((r) => r.id === id);
+    setConfirmModal({
+      isOpen: true,
+      title: '¿Eliminar registro de salud?',
+      description: 'Se eliminará este registro médico del carnet sanitario digital.',
+      itemName: target?.title,
+      confirmLabel: 'Eliminar Registro',
+      variant: 'danger',
+      onConfirm: () => {
+        storageService.deleteHealthRecord(id);
+        refreshAllData();
+      },
+    });
   };
 
   const handleAddWeight = (entry: Omit<PetWeightEntry, 'id'>) => {
@@ -136,6 +189,22 @@ export default function App() {
     refreshAllData();
   };
 
+  const handleDeleteMedication = (id: string) => {
+    const target = medications.find((m) => m.id === id);
+    setConfirmModal({
+      isOpen: true,
+      title: '¿Eliminar tratamiento?',
+      description: 'Se eliminará este medicamento del plan de tratamientos.',
+      itemName: target?.name,
+      confirmLabel: 'Eliminar Medicamento',
+      variant: 'danger',
+      onConfirm: () => {
+        storageService.deleteMedication(id);
+        refreshAllData();
+      },
+    });
+  };
+
   const handleRecordDose = (petId: string, medId: string, by: string, note?: string) => {
     storageService.recordDose(petId, medId, by, note);
     refreshAllData();
@@ -148,8 +217,19 @@ export default function App() {
   };
 
   const handleDeleteEvent = (id: string) => {
-    storageService.deleteCalendarEvent(id);
-    refreshAllData();
+    const target = calendarEvents.find((e) => e.id === id);
+    setConfirmModal({
+      isOpen: true,
+      title: '¿Eliminar cita de la agenda?',
+      description: 'Se eliminará esta cita o revisión programada.',
+      itemName: target?.title,
+      confirmLabel: 'Eliminar Cita',
+      variant: 'danger',
+      onConfirm: () => {
+        storageService.deleteCalendarEvent(id);
+        refreshAllData();
+      },
+    });
   };
 
   const handleToggleEvent = (id: string) => {
@@ -169,8 +249,19 @@ export default function App() {
   };
 
   const handleDeleteReminder = (id: string) => {
-    storageService.deleteReminder(id);
-    refreshAllData();
+    const target = reminders.find((r) => r.id === id);
+    setConfirmModal({
+      isOpen: true,
+      title: '¿Eliminar recordatorio?',
+      description: 'Se eliminará este aviso preventivo de la agenda periódica.',
+      itemName: target?.title,
+      confirmLabel: 'Eliminar Recordatorio',
+      variant: 'danger',
+      onConfirm: () => {
+        storageService.deleteReminder(id);
+        refreshAllData();
+      },
+    });
   };
 
   // Document handlers
@@ -180,8 +271,19 @@ export default function App() {
   };
 
   const handleDeleteDocument = (id: string) => {
-    storageService.deleteDocument(id);
-    refreshAllData();
+    const target = documents.find((d) => d.id === id);
+    setConfirmModal({
+      isOpen: true,
+      title: '¿Eliminar documento de la bóveda?',
+      description: 'Se eliminará este informe o receta veterinaria de los archivos.',
+      itemName: target?.title,
+      confirmLabel: 'Eliminar Documento',
+      variant: 'danger',
+      onConfirm: () => {
+        storageService.deleteDocument(id);
+        refreshAllData();
+      },
+    });
   };
 
   // Family handlers
@@ -191,19 +293,33 @@ export default function App() {
   };
 
   const handleDeleteFamilyMember = (id: string) => {
-    storageService.deleteFamilyMember(id);
-    refreshAllData();
+    const target = familyMembers.find((m) => m.id === id);
+    setConfirmModal({
+      isOpen: true,
+      title: '¿Eliminar cuidador / familiar?',
+      description: 'Se desvinculará a este miembro del equipo de cuidados de la mascota.',
+      itemName: target?.name,
+      confirmLabel: 'Eliminar Miembro',
+      variant: 'danger',
+      onConfirm: () => {
+        storageService.deleteFamilyMember(id);
+        refreshAllData();
+      },
+    });
   };
 
   const activePet = pets.find((p) => p.id === selectedPetId) || pets[0];
 
+  // If no pets registered, show the welcoming onboarding interface
   if (!activePet) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
         <OnboardingModal
           isOpen={true}
+          isFirstTime={true}
           onClose={() => {}}
           onComplete={handleAddPet}
+          onLoadDemoData={handleLoadDemoData}
         />
       </div>
     );
@@ -223,7 +339,7 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-20 md:pb-12">
         {activeTab === 'inicio' && (
           <Dashboard
             pet={activePet}
@@ -284,6 +400,7 @@ export default function App() {
             familyMembers={familyMembers}
             onAddMedication={handleAddMedication}
             onUpdateMedication={handleUpdateMedication}
+            onDeleteMedication={handleDeleteMedication}
             onRecordDose={handleRecordDose}
           />
         )}
@@ -343,6 +460,7 @@ export default function App() {
         isOpen={showAddPetModal}
         onClose={() => setShowAddPetModal(false)}
         onComplete={handleAddPet}
+        onLoadDemoData={pets.length === 0 ? handleLoadDemoData : undefined}
       />
 
       {/* Spanish Law Modal */}
@@ -352,6 +470,18 @@ export default function App() {
           onClose={() => setShowLawModal(false)}
         />
       )}
+
+      {/* Global Confirmation Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        description={confirmModal.description}
+        itemName={confirmModal.itemName}
+        confirmLabel={confirmModal.confirmLabel}
+        variant={confirmModal.variant}
+        onConfirm={confirmModal.onConfirm}
+        onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

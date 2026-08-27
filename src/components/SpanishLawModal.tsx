@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   ShieldCheck,
   Building2,
@@ -18,26 +18,47 @@ export const SpanishLawModal: React.FC<SpanishLawModalProps> = ({
   pet,
   onClose,
 }) => {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-      <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full p-6 max-h-[85vh] overflow-y-auto border border-slate-200 animate-in fade-in zoom-in duration-150">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="law-modal-title"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-xl max-w-2xl w-full p-6 max-h-[85vh] overflow-y-auto border border-slate-200 animate-in zoom-in-95 duration-150"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold text-base">
               🇪🇸
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 id="law-modal-title" className="text-base font-bold text-slate-900">
                 Normativa Española: Ley 7/2023 de Bienestar Animal
               </h2>
               <p className="text-xs text-slate-500">
-                Obligaciones legales para propietarios de mascotas en {pet.community}.
+                Obligaciones legales para propietarios de mascotas en {pet.community || 'España'}.
               </p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            aria-label="Cerrar ventana de Ley Bienestar Animal"
           >
             <X className="w-5 h-5" />
           </button>
@@ -98,15 +119,16 @@ export const SpanishLawModal: React.FC<SpanishLawModalProps> = ({
               <span>5. Curso de Tenencia Responsable</span>
             </div>
             <p className="text-slate-600">
-              Las personas que opten a ser titulares de perros deberán acreditar la realización de un curso de formación para la tenencia de perros con validez indefinida y carácter gratuito.
+              Las personas titulares o que deseen adoptar un perro deberán acreditar la realización de un curso de formación para la tenencia de perros con validez indefinida y gratuito, según se desarrolle reglamentariamente.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center justify-end mt-6 pt-4 border-t border-slate-100">
+        <div className="mt-6 pt-4 border-t border-slate-100 flex justify-end">
           <button
+            type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 transition-colors"
+            className="px-5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-xs"
           >
             Entendido
           </button>

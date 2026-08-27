@@ -61,15 +61,15 @@ function setItem<T>(key: string, value: T): void {
 }
 
 export const StorageService = {
-  // Onboarding
+  // Onboarding flag
   isOnboardingCompleted(): boolean {
-    return getItem<boolean>(KEYS.ONBOARDING_COMPLETED, true);
+    return getItem<boolean>(KEYS.ONBOARDING_COMPLETED, false);
   },
   setOnboardingCompleted(completed: boolean): void {
     setItem(KEYS.ONBOARDING_COMPLETED, completed);
   },
 
-  // User
+  // User Profile
   getUser(): UserProfile {
     return getItem<UserProfile>(KEYS.USER, INITIAL_USER);
   },
@@ -82,7 +82,8 @@ export const StorageService = {
 
   // Pets
   getPets(): Pet[] {
-    return getItem<Pet[]>(KEYS.PETS, INITIAL_PETS);
+    // Return empty array by default for new real users (never auto-seed demo data)
+    return getItem<Pet[]>(KEYS.PETS, []);
   },
   savePets(pets: Pet[]): void {
     setItem(KEYS.PETS, pets);
@@ -107,6 +108,7 @@ export const StorageService = {
     const updated = [...pets, newPet];
     this.savePets(updated);
     this.setSelectedPetId(newPet.id);
+    this.setOnboardingCompleted(true);
 
     // Add initial weight entry
     if (newPet.weightKg) {
@@ -119,7 +121,7 @@ export const StorageService = {
 
     // Add activity log
     this.addActivityLog(newPet.id, {
-      userName: this.getUser().name,
+      userName: this.getUser().name || 'Propietario',
       userRole: 'propietario',
       actionType: 'nota',
       description: `Se registró a ${newPet.name} en MiPatas.`,
@@ -141,15 +143,40 @@ export const StorageService = {
     if (this.getSelectedPetId() === petId) {
       this.setSelectedPetId(pets[0]?.id || '');
     }
+    // Also clean up associated records for this pet
+    const health = this.getHealthRecords().filter((r) => r.petId !== petId);
+    setItem(KEYS.HEALTH_RECORDS, health);
+
+    const meds = this.getMedications().filter((m) => m.petId !== petId);
+    setItem(KEYS.MEDICATIONS, meds);
+
+    const evts = this.getCalendarEvents().filter((e) => e.petId !== petId);
+    setItem(KEYS.CALENDAR_EVENTS, evts);
+
+    const docs = this.getDocuments().filter((d) => d.petId !== petId);
+    setItem(KEYS.DOCUMENTS, docs);
+
+    const rems = this.getReminders().filter((r) => r.petId !== petId);
+    setItem(KEYS.REMINDERS, rems);
+
+    const doses = this.getDoseLogs().filter((d) => d.petId !== petId);
+    setItem(KEYS.DOSE_LOGS, doses);
+
+    const acts = this.getActivityLogs().filter((a) => a.petId !== petId);
+    setItem(KEYS.ACTIVITY_LOGS, acts);
+
+    const weights = getItem<Record<string, PetWeightEntry[]>>(KEYS.WEIGHT_HISTORY, {});
+    delete weights[petId];
+    setItem(KEYS.WEIGHT_HISTORY, weights);
   },
 
   // Weight History
   getWeightHistory(petId: string): PetWeightEntry[] {
-    const all = getItem<Record<string, PetWeightEntry[]>>(KEYS.WEIGHT_HISTORY, INITIAL_WEIGHT_HISTORY);
+    const all = getItem<Record<string, PetWeightEntry[]>>(KEYS.WEIGHT_HISTORY, {});
     return all[petId] || [];
   },
   addWeightEntry(petId: string, entry: Omit<PetWeightEntry, 'id'>): PetWeightEntry {
-    const all = getItem<Record<string, PetWeightEntry[]>>(KEYS.WEIGHT_HISTORY, INITIAL_WEIGHT_HISTORY);
+    const all = getItem<Record<string, PetWeightEntry[]>>(KEYS.WEIGHT_HISTORY, {});
     const petEntries = all[petId] || [];
     const newEntry: PetWeightEntry = {
       ...entry,
@@ -164,7 +191,7 @@ export const StorageService = {
 
     // Add activity log
     this.addActivityLog(petId, {
-      userName: this.getUser().name,
+      userName: this.getUser().name || 'Propietario',
       userRole: 'propietario',
       actionType: 'peso',
       description: `Se registró nuevo peso: ${entry.weightKg} kg (${entry.notes || 'control'}).`,
@@ -175,7 +202,7 @@ export const StorageService = {
 
   // Health Records
   getHealthRecords(petId?: string): HealthRecord[] {
-    const all = getItem<HealthRecord[]>(KEYS.HEALTH_RECORDS, INITIAL_HEALTH_RECORDS);
+    const all = getItem<HealthRecord[]>(KEYS.HEALTH_RECORDS, []);
     if (!petId) return all;
     return all.filter((r) => r.petId === petId);
   },
@@ -190,7 +217,7 @@ export const StorageService = {
 
     // Activity log
     this.addActivityLog(record.petId, {
-      userName: this.getUser().name,
+      userName: this.getUser().name || 'Propietario',
       userRole: 'propietario',
       actionType: 'nota',
       description: `Añadió registro de salud: ${record.title} (${record.category}).`,
@@ -205,7 +232,7 @@ export const StorageService = {
 
   // Medications
   getMedications(petId?: string): Medication[] {
-    const all = getItem<Medication[]>(KEYS.MEDICATIONS, INITIAL_MEDICATIONS);
+    const all = getItem<Medication[]>(KEYS.MEDICATIONS, []);
     if (!petId) return all;
     return all.filter((m) => m.petId === petId);
   },
@@ -221,7 +248,7 @@ export const StorageService = {
 
     // Activity log
     this.addActivityLog(med.petId, {
-      userName: this.getUser().name,
+      userName: this.getUser().name || 'Propietario',
       userRole: 'propietario',
       actionType: 'medicamento',
       description: `Inició tratamiento: ${med.name} (${med.dosage}, ${med.frequency}).`,
@@ -236,6 +263,10 @@ export const StorageService = {
     all[idx] = { ...all[idx], ...updates };
     setItem(KEYS.MEDICATIONS, all);
     return all[idx];
+  },
+  deleteMedication(id: string): void {
+    const all = this.getMedications().filter((m) => m.id !== id);
+    setItem(KEYS.MEDICATIONS, all);
   },
   recordDose(
     petId: string,
@@ -268,7 +299,7 @@ export const StorageService = {
       notes,
     };
 
-    const doseLogs = getItem<DoseLog[]>(KEYS.DOSE_LOGS, INITIAL_DOSE_LOGS);
+    const doseLogs = getItem<DoseLog[]>(KEYS.DOSE_LOGS, []);
     setItem(KEYS.DOSE_LOGS, [newLog, ...doseLogs]);
 
     if (med) {
@@ -288,14 +319,14 @@ export const StorageService = {
     return newLog;
   },
   getDoseLogs(petId?: string): DoseLog[] {
-    const all = getItem<DoseLog[]>(KEYS.DOSE_LOGS, INITIAL_DOSE_LOGS);
+    const all = getItem<DoseLog[]>(KEYS.DOSE_LOGS, []);
     if (!petId) return all;
     return all.filter((l) => l.petId === petId);
   },
 
   // Calendar Events
   getCalendarEvents(petId?: string): CalendarEvent[] {
-    const all = getItem<CalendarEvent[]>(KEYS.CALENDAR_EVENTS, INITIAL_CALENDAR_EVENTS);
+    const all = getItem<CalendarEvent[]>(KEYS.CALENDAR_EVENTS, []);
     if (!petId) return all;
     return all.filter((e) => e.petId === petId);
   },
@@ -309,7 +340,7 @@ export const StorageService = {
     setItem(KEYS.CALENDAR_EVENTS, updated);
 
     this.addActivityLog(event.petId, {
-      userName: this.getUser().name,
+      userName: this.getUser().name || 'Propietario',
       userRole: 'propietario',
       actionType: 'cita',
       description: `Programó evento en agenda: ${event.title} para el ${event.date}.`,
@@ -329,10 +360,13 @@ export const StorageService = {
       setItem(KEYS.CALENDAR_EVENTS, all);
     }
   },
+  toggleCalendarEvent(id: string): void {
+    this.toggleCalendarEventCompleted(id);
+  },
 
   // Documents
   getDocuments(petId?: string): DocumentItem[] {
-    const all = getItem<DocumentItem[]>(KEYS.DOCUMENTS, INITIAL_DOCUMENTS);
+    const all = getItem<DocumentItem[]>(KEYS.DOCUMENTS, []);
     if (!petId) return all;
     return all.filter((d) => d.petId === petId);
   },
@@ -346,7 +380,7 @@ export const StorageService = {
     setItem(KEYS.DOCUMENTS, updated);
 
     this.addActivityLog(doc.petId, {
-      userName: this.getUser().name,
+      userName: this.getUser().name || 'Propietario',
       userRole: 'propietario',
       actionType: 'documento',
       description: `Subió documento clínico: ${doc.title} (${doc.category}).`,
@@ -369,7 +403,7 @@ export const StorageService = {
 
   // Reminders
   getReminders(petId?: string): Reminder[] {
-    const all = getItem<Reminder[]>(KEYS.REMINDERS, INITIAL_REMINDERS);
+    const all = getItem<Reminder[]>(KEYS.REMINDERS, []);
     if (!petId) return all;
     return all.filter((r) => r.petId === petId);
   },
@@ -398,7 +432,7 @@ export const StorageService = {
 
   // Family Members
   getFamilyMembers(): FamilyMember[] {
-    return getItem<FamilyMember[]>(KEYS.FAMILY_MEMBERS, INITIAL_FAMILY_MEMBERS);
+    return getItem<FamilyMember[]>(KEYS.FAMILY_MEMBERS, []);
   },
   addFamilyMember(member: Omit<FamilyMember, 'id'>): FamilyMember {
     const all = this.getFamilyMembers();
@@ -420,7 +454,7 @@ export const StorageService = {
 
   // Activity Logs
   getActivityLogs(petId?: string): ActivityLog[] {
-    const all = getItem<ActivityLog[]>(KEYS.ACTIVITY_LOGS, INITIAL_ACTIVITY_LOGS);
+    const all = getItem<ActivityLog[]>(KEYS.ACTIVITY_LOGS, []);
     if (!petId) return all;
     return all.filter((a) => a.petId === petId);
   },
@@ -433,7 +467,7 @@ export const StorageService = {
       description: string;
     }
   ): ActivityLog {
-    const all = getItem<ActivityLog[]>(KEYS.ACTIVITY_LOGS, INITIAL_ACTIVITY_LOGS);
+    const all = getItem<ActivityLog[]>(KEYS.ACTIVITY_LOGS, []);
     const newLog: ActivityLog = {
       id: `act-${Date.now()}`,
       petId,
@@ -443,25 +477,18 @@ export const StorageService = {
       description: entry.description,
       timestamp: new Date().toISOString(),
     };
-    const updated = [newLog, ...all].slice(0, 100); // Keep last 100
+    const updated = [newLog, ...all].slice(0, 100);
     setItem(KEYS.ACTIVITY_LOGS, updated);
     return newLog;
   },
 
-  // Initialization
+  // Initialization check (does not inject demo data automatically)
   init(): void {
-    const existingPets = localStorage.getItem(KEYS.PETS);
-    if (!existingPets) {
-      this.resetAllData();
-    }
+    // No-op: keep storage clean for real users
   },
 
-  toggleCalendarEvent(id: string): void {
-    this.toggleCalendarEventCompleted(id);
-  },
-
-  // Reset to initial mock data
-  resetAllData(): void {
+  // Load interactive demo data on explicit user request
+  loadDemoData(): void {
     setItem(KEYS.PETS, INITIAL_PETS);
     setItem(KEYS.SELECTED_PET_ID, INITIAL_PETS[0].id);
     setItem(KEYS.USER, INITIAL_USER);
@@ -474,8 +501,17 @@ export const StorageService = {
     setItem(KEYS.FAMILY_MEMBERS, INITIAL_FAMILY_MEMBERS);
     setItem(KEYS.ACTIVITY_LOGS, INITIAL_ACTIVITY_LOGS);
     setItem(KEYS.WEIGHT_HISTORY, INITIAL_WEIGHT_HISTORY);
+    setItem(KEYS.ONBOARDING_COMPLETED, true);
+  },
+
+  // Clear all local data to start 100% fresh
+  clearAllData(): void {
+    Object.values(KEYS).forEach((k) => localStorage.removeItem(k));
+  },
+
+  resetAllData(): void {
+    this.loadDemoData();
   },
 };
 
 export const storageService = StorageService;
-

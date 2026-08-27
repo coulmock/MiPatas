@@ -6,6 +6,8 @@ import {
   Plus,
   Bell,
   Check,
+  Trash2,
+  X,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Pet, Medication, DoseLog, FamilyMember } from '../types';
@@ -17,6 +19,7 @@ interface MedicationsViewProps {
   familyMembers: FamilyMember[];
   onAddMedication: (med: Omit<Medication, 'id'>) => void;
   onUpdateMedication: (id: string, updates: Partial<Medication>) => void;
+  onDeleteMedication?: (id: string) => void;
   onRecordDose: (petId: string, medId: string, by: string, note?: string) => void;
 }
 
@@ -27,6 +30,7 @@ export const MedicationsView: React.FC<MedicationsViewProps> = ({
   familyMembers,
   onAddMedication,
   onUpdateMedication,
+  onDeleteMedication,
   onRecordDose,
 }) => {
   const [tab, setTab] = useState<'activos' | 'historial' | 'tomas'>('activos');
@@ -43,19 +47,19 @@ export const MedicationsView: React.FC<MedicationsViewProps> = ({
   const [frequency, setFrequency] = useState('Cada 12 horas con comida');
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(
-    new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
   );
-  const [instructions, setInstructions] = useState('');
-  const [prescribedByVet, setPrescribedByVet] = useState(pet.vetDoctorName || 'Dra. Elena Santos');
   const [timesOfDayStr, setTimesOfDayStr] = useState('08:30, 20:30');
+  const [instructions, setInstructions] = useState('');
+  const [prescribedByVet, setPrescribedByVet] = useState(pet.vetDoctorName || 'Clínica Veterinaria');
   const [totalDosesTarget, setTotalDosesTarget] = useState<number>(14);
 
   const activeMeds = medications.filter((m) => m.isActive);
   const pastMeds = medications.filter((m) => !m.isActive);
 
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const handleCreateMedication = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || !dosage.trim()) return;
 
     const times = timesOfDayStr
       .split(',')
@@ -65,118 +69,141 @@ export const MedicationsView: React.FC<MedicationsViewProps> = ({
     onAddMedication({
       petId: pet.id,
       name: name.trim(),
-      dosage: dosage.trim() || '1 dosis',
+      dosage: dosage.trim(),
       frequency: frequency.trim(),
       startDate,
       endDate,
+      timesOfDay: times.length > 0 ? times : ['08:30'],
       instructions: instructions.trim(),
-      prescribedByVet: prescribedByVet.trim(),
       isActive: true,
-      timesOfDay: times.length > 0 ? times : ['09:00'],
-      reminderEnabled: true,
-      totalDosesTarget: Number(totalDosesTarget) || 14,
+      prescribedByVet: prescribedByVet.trim(),
+      totalDosesTarget: Number(totalDosesTarget) || 10,
+      dosesGivenCount: 0,
     });
 
-    setShowAddModal(false);
+    // Reset form & close
     setName('');
     setDosage('');
     setInstructions('');
+    setShowAddModal(false);
+
+    try {
+      confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
+    } catch (err) {
+      // silent
+    }
   };
 
-  const handleConfirmDose = () => {
+  const handleConfirmDose = (e: React.FormEvent) => {
+    e.preventDefault();
     if (!selectedMedForDose) return;
-    onRecordDose(pet.id, selectedMedForDose.id, adminName, doseNote);
+
+    onRecordDose(
+      pet.id,
+      selectedMedForDose.id,
+      adminName,
+      doseNote.trim() || undefined
+    );
+
     setSelectedMedForDose(null);
     setDoseNote('');
 
     try {
-      confetti({
-        particleCount: 60,
-        spread: 60,
-        origin: { y: 0.65 },
-      });
-    } catch {}
+      confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+    } catch (err) {
+      // silent
+    }
   };
 
   return (
     <div className="space-y-6 pb-16">
-      {/* Header Card */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
-        <div className="flex items-center space-x-3.5">
-          <div className="w-10 h-10 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs">
-            <Pill className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              Medicamentos y Tratamientos
-            </h1>
-            <p className="text-xs text-slate-500 font-medium">
-              Control de posología, tomas, recordatorios y registro compartido para {pet.name}.
-            </p>
-          </div>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900">
+            Control de Medicación y Tratamientos
+          </h1>
+          <p className="text-xs text-slate-500">
+            Registro de tomas, pautas activas y adherencia veterinaria para {pet.name}.
+          </p>
         </div>
 
         <button
-          id="add-medication-btn"
+          id="open-add-med-btn"
+          type="button"
           onClick={() => setShowAddModal(true)}
-          className="flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-xs transition-colors self-start sm:self-auto"
+          className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-xs transition-colors self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
-          <span>+ Nuevo Tratamiento</span>
+          <span>Nuevo Tratamiento</span>
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center space-x-1.5 border-b border-slate-200 pb-2">
+      <div className="flex space-x-2 border-b border-slate-200 pb-2">
         <button
+          type="button"
           onClick={() => setTab('activos')}
-          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center space-x-1.5 ${
             tab === 'activos'
-              ? 'bg-indigo-50 text-indigo-700'
-              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              ? 'bg-indigo-50 text-indigo-700 font-bold'
+              : 'text-slate-500 hover:text-slate-800'
           }`}
         >
-          Tratamientos en Curso ({activeMeds.length})
+          <span>Tratamientos Activos</span>
+          <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-indigo-200/80 text-indigo-900">
+            {activeMeds.length}
+          </span>
         </button>
+
         <button
+          type="button"
           onClick={() => setTab('tomas')}
-          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center space-x-1.5 ${
             tab === 'tomas'
-              ? 'bg-indigo-50 text-indigo-700'
-              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              ? 'bg-indigo-50 text-indigo-700 font-bold'
+              : 'text-slate-500 hover:text-slate-800'
           }`}
         >
-          Registro de Dosis ({doseLogs.length})
+          <span>Historial de Tomas</span>
+          <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-slate-200 text-slate-700">
+            {doseLogs.length}
+          </span>
         </button>
+
         <button
+          type="button"
           onClick={() => setTab('historial')}
-          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center space-x-1.5 ${
             tab === 'historial'
-              ? 'bg-indigo-50 text-indigo-700'
-              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              ? 'bg-indigo-50 text-indigo-700 font-bold'
+              : 'text-slate-500 hover:text-slate-800'
           }`}
         >
-          Historial Concluido ({pastMeds.length})
+          <span>Tratamientos Pasados</span>
+          <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-slate-200 text-slate-700">
+            {pastMeds.length}
+          </span>
         </button>
       </div>
 
       {/* TAB: ACTIVOS */}
       {tab === 'activos' && (
-        <div className="space-y-4">
+        <div>
           {activeMeds.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {activeMeds.map((med) => {
                 const percent = med.totalDosesTarget
                   ? Math.min(100, Math.round(((med.dosesGivenCount || 0) / med.totalDosesTarget) * 100))
-                  : 50;
+                  : 0;
 
                 return (
                   <div
                     key={med.id}
-                    className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between"
+                    className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between"
                   >
                     <div>
-                      <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex items-start justify-between mb-3">
                         <div>
                           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 uppercase tracking-wider">
                             En Curso
@@ -185,12 +212,26 @@ export const MedicationsView: React.FC<MedicationsViewProps> = ({
                             {med.name}
                           </h3>
                         </div>
-                        <button
-                          onClick={() => onUpdateMedication(med.id, { isActive: false })}
-                          className="text-[11px] font-semibold text-slate-500 hover:text-slate-800 border border-slate-200 px-2 py-1 rounded-md"
-                        >
-                          Concluir
-                        </button>
+                        <div className="flex items-center space-x-1">
+                          <button
+                            type="button"
+                            onClick={() => onUpdateMedication(med.id, { isActive: false })}
+                            className="text-[11px] font-semibold text-slate-500 hover:text-slate-800 border border-slate-200 px-2 py-1 rounded-md"
+                          >
+                            Concluir
+                          </button>
+                          {onDeleteMedication && (
+                            <button
+                              type="button"
+                              onClick={() => onDeleteMedication(med.id)}
+                              className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                              title="Eliminar tratamiento"
+                              aria-label={`Eliminar medicamento ${med.name}`}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </div>
 
                       <div className="text-xs font-semibold text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100 inline-block mb-3">
@@ -245,6 +286,7 @@ export const MedicationsView: React.FC<MedicationsViewProps> = ({
                     {/* Action Button: Dar Dosis */}
                     <button
                       id={`med-give-dose-${med.id}`}
+                      type="button"
                       onClick={() => setSelectedMedForDose(med)}
                       className="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-xs transition-colors flex items-center justify-center space-x-1.5"
                     >
@@ -258,55 +300,58 @@ export const MedicationsView: React.FC<MedicationsViewProps> = ({
           ) : (
             <div className="p-12 text-center bg-white rounded-2xl border border-slate-200 text-slate-500">
               <Pill className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-              <h3 className="text-sm font-bold text-slate-700">Sin tratamientos activos</h3>
-              <p className="text-xs text-slate-400 mt-1">
-                {pet.name} no tiene medicamentos pautados actualmente.
+              <p className="text-sm font-semibold text-slate-700">No hay tratamientos activos</p>
+              <p className="text-xs text-slate-400 max-w-xs mx-auto mt-1 mb-4">
+                Si el veterinario le receta antibióticos, colirios o antiinflamatorios, regístralos aquí.
               </p>
+              <button
+                type="button"
+                onClick={() => setShowAddModal(true)}
+                className="px-4 py-2 rounded-xl bg-indigo-50 text-indigo-700 font-semibold text-xs hover:bg-indigo-100 transition-colors"
+              >
+                + Añadir Medicamento
+              </button>
             </div>
           )}
         </div>
       )}
 
-      {/* TAB: TOMAS & AUDIT LOG */}
+      {/* TAB: TOMAS REGISTRADAS */}
       {tab === 'tomas' && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
-            <h3 className="text-base font-bold text-slate-900">
-              Registro Auditado de Dosis Administradas
-            </h3>
-            <span className="text-xs text-slate-400">
-              Sincronizado con el equipo familiar
-            </span>
-          </div>
-
-          <div className="divide-y divide-slate-100">
-            {doseLogs.map((log) => (
-              <div key={log.id} className="py-3 flex items-start justify-between text-xs">
-                <div className="flex items-start space-x-3">
-                  <div className="w-7 h-7 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0">
+        <div className="space-y-3">
+          {doseLogs.length > 0 ? (
+            doseLogs.map((log) => (
+              <div
+                key={log.id}
+                className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-between text-xs"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
                     ✓
                   </div>
                   <div>
-                    <div className="font-semibold text-slate-900">
-                      {log.administeredBy} le administró {log.medicationName} ({log.dosage})
+                    <div className="font-bold text-slate-800">{log.medicationName}</div>
+                    <div className="text-slate-500">
+                      Administrado por <strong>{log.administeredBy}</strong>
+                      {log.note && ` • "${log.note}"`}
                     </div>
-                    {log.notes && (
-                      <p className="text-slate-600 mt-0.5 italic">"{log.notes}"</p>
-                    )}
                   </div>
                 </div>
-                <div className="text-right text-[11px] text-slate-400 shrink-0 ml-2 font-mono">
-                  {new Date(log.timestamp).toLocaleDateString()}{' '}
-                  {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                <div className="text-right text-slate-400 text-[11px] font-mono">
+                  {new Date(log.timestamp).toLocaleDateString('es-ES', {
+                    day: '2-digit',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </div>
               </div>
-            ))}
-            {doseLogs.length === 0 && (
-              <p className="text-xs text-slate-400 py-6 text-center">
-                Aún no hay tomas registradas en el historial.
-              </p>
-            )}
-          </div>
+            ))
+          ) : (
+            <p className="text-xs text-slate-400 py-8 text-center bg-white rounded-2xl border border-slate-200">
+              No hay tomas registradas recientemente.
+            </p>
+          )}
         </div>
       )}
 
@@ -324,12 +369,26 @@ export const MedicationsView: React.FC<MedicationsViewProps> = ({
                   {m.dosage} • Finalizado el {m.endDate}
                 </p>
               </div>
-              <button
-                onClick={() => onUpdateMedication(m.id, { isActive: true })}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-700 hover:bg-indigo-50 border border-indigo-200 transition-colors"
-              >
-                Reactivar
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => onUpdateMedication(m.id, { isActive: true })}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-700 hover:bg-indigo-50 border border-indigo-200 transition-colors"
+                >
+                  Reactivar
+                </button>
+                {onDeleteMedication && (
+                  <button
+                    type="button"
+                    onClick={() => onDeleteMedication(m.id)}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                    title="Eliminar del historial"
+                    aria-label={`Eliminar medicamento ${m.name}`}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
           ))}
           {pastMeds.length === 0 && (
@@ -342,88 +401,118 @@ export const MedicationsView: React.FC<MedicationsViewProps> = ({
 
       {/* MODAL: REGISTRAR TOMA DE DOSIS */}
       {selectedMedForDose && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-150">
-            <div className="flex items-center space-x-3 mb-4 pb-3 border-b border-slate-100">
-              <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center">
-                <Pill className="w-5 h-5" />
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="dose-modal-title"
+        >
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 border border-slate-200 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <div className="flex items-center space-x-3">
+                <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center">
+                  <Pill className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 id="dose-modal-title" className="text-base font-bold text-slate-900">
+                    Confirmar Toma de Medicamento
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    {selectedMedForDose.name} ({selectedMedForDose.dosage})
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900">
-                  Confirmar Toma de Medicamento
-                </h3>
-                <p className="text-xs text-slate-500">
-                  {selectedMedForDose.name} ({selectedMedForDose.dosage})
-                </p>
-              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedMedForDose(null)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+                aria-label="Cerrar modal de confirmación de dosis"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
-            <div className="space-y-4 text-xs">
+            <form onSubmit={handleConfirmDose} className="space-y-3.5 text-xs">
               <div>
                 <label className="font-semibold text-slate-700 block mb-1">
-                  ¿Quién le ha administrado la dosis?
+                  ¿Quién administra la dosis?
                 </label>
                 <select
                   value={adminName}
                   onChange={(e) => setAdminName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none bg-white"
                 >
-                  {familyMembers.map((fm) => (
-                    <option key={fm.id} value={`${fm.name} (${fm.role})`}>
-                      {fm.name} ({fm.role})
+                  {familyMembers.map((m) => (
+                    <option key={m.id} value={m.name}>
+                      {m.name} ({m.role})
                     </option>
                   ))}
-                  <option value="Otro Cuidador">Otro Cuidador</option>
+                  <option value="Clínica Veterinaria">Clínica Veterinaria</option>
                 </select>
               </div>
 
               <div>
                 <label className="font-semibold text-slate-700 block mb-1">
-                  Observación o cómo se lo tomó (opcional)
+                  Nota u observación (opcional)
                 </label>
                 <input
                   type="text"
-                  placeholder="Ej. Con comida húmeda, sin rechazo"
+                  placeholder="Ej. Con un trocito de pavo, sin problemas"
                   value={doseNote}
                   onChange={(e) => setDoseNote(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                 />
               </div>
 
-              <div className="p-3 rounded-lg bg-slate-50 text-xs text-slate-500 border border-slate-100">
-                La toma quedará registrada en el historial compartido y visible para todos los miembros familiares.
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedMedForDose(null)}
+                  className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-lg text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs transition-colors"
+                >
+                  Confirmar Toma
+                </button>
               </div>
-            </div>
-
-            <div className="flex items-center justify-end space-x-2 mt-6 pt-3 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setSelectedMedForDose(null)}
-                className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDose}
-                className="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs"
-              >
-                Guardar Dosis
-              </button>
-            </div>
+            </form>
           </div>
         </div>
       )}
 
-      {/* MODAL: AÑADIR TRATAMIENTO */}
+      {/* MODAL: AÑADIR NUEVO TRATAMIENTO */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 max-h-[85vh] overflow-y-auto border border-slate-200 animate-in fade-in zoom-in duration-150">
-            <h3 className="text-base font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100">
-              Nuevo Tratamiento / Medicamento para {pet.name}
-            </h3>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-med-modal-title"
+        >
+          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 max-h-[85vh] overflow-y-auto border border-slate-200 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <div>
+                <h3 id="add-med-modal-title" className="text-base font-bold text-slate-900">
+                  Nuevo Tratamiento / Medicación
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Prescripción veterinaria para {pet.name}.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+                aria-label="Cerrar modal de nuevo tratamiento"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-            <form onSubmit={handleAddSubmit} className="space-y-4 text-xs">
+            <form onSubmit={handleCreateMedication} className="space-y-3.5 text-xs">
               <div>
                 <label className="font-semibold text-slate-700 block mb-1">
                   Nombre del Medicamento *
@@ -502,12 +591,14 @@ export const MedicationsView: React.FC<MedicationsViewProps> = ({
                 </div>
                 <div>
                   <label className="font-semibold text-slate-700 block mb-1">
-                    Total Dosis Previstas
+                    Total de Tomas Prescritas
                   </label>
                   <input
                     type="number"
+                    min="1"
+                    max="100"
                     value={totalDosesTarget}
-                    onChange={(e) => setTotalDosesTarget(parseInt(e.target.value) || 14)}
+                    onChange={(e) => setTotalDosesTarget(parseInt(e.target.value) || 10)}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                   />
                 </div>
@@ -515,11 +606,11 @@ export const MedicationsView: React.FC<MedicationsViewProps> = ({
 
               <div>
                 <label className="font-semibold text-slate-700 block mb-1">
-                  Veterinario que lo prescribe
+                  Veterinario que prescribe
                 </label>
                 <input
                   type="text"
-                  placeholder="Ej. Dra. Elena Santos (Col. 4521)"
+                  placeholder="Ej. Dr. Carlos Ruiz - Clínica San Antón"
                   value={prescribedByVet}
                   onChange={(e) => setPrescribedByVet(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
@@ -528,28 +619,28 @@ export const MedicationsView: React.FC<MedicationsViewProps> = ({
 
               <div>
                 <label className="font-semibold text-slate-700 block mb-1">
-                  Instrucciones específicas de administración
+                  Pautas especiales o modo de administración
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="Ej. No administrar en ayunas. Disolver en un poco de agua o mezclar con paté."
+                  placeholder="Ej. Administrar siempre con el estómago lleno para proteger la mucosa gástrica."
                   value={instructions}
                   onChange={(e) => setInstructions(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end space-x-2 pt-4 border-t border-slate-100">
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                  className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs"
+                  className="px-5 py-2 rounded-lg text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs transition-colors"
                 >
                   Guardar Tratamiento
                 </button>

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Pet, AiChatMessage, HealthRecord, Medication } from '../types';
 import { geminiService } from '../services/geminiService';
+import { ConfirmModal } from './ConfirmModal';
 
 interface AiAssistantViewProps {
   pet: Pet;
@@ -68,6 +69,7 @@ Puedo ayudarte con:
 
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -132,17 +134,15 @@ Puedo ayudarte con:
     }
   };
 
-  const handleClearChat = () => {
-    if (confirm('¿Deseas reiniciar la conversación con MiPatas AI?')) {
-      setMessages([
-        {
-          id: 'welcome-reset',
-          role: 'assistant',
-          content: `Conversación reiniciada. ¿Qué consulta tienes sobre **${pet.name}**?`,
-          timestamp: new Date().toISOString(),
-        },
-      ]);
-    }
+  const handleConfirmClearChat = () => {
+    setMessages([
+      {
+        id: 'welcome-reset',
+        role: 'assistant',
+        content: `Conversación reiniciada. ¿Qué consulta tienes sobre **${pet.name}**?`,
+        timestamp: new Date().toISOString(),
+      },
+    ]);
   };
 
   return (
@@ -167,8 +167,10 @@ Puedo ayudarte con:
         </div>
 
         <button
-          onClick={handleClearChat}
+          type="button"
+          onClick={() => setShowClearConfirm(true)}
           className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold self-start sm:self-auto transition-colors"
+          aria-label="Reiniciar conversación de chat con MiPatas AI"
         >
           <RotateCcw className="w-3.5 h-3.5" />
           <span>Reiniciar Chat</span>
@@ -271,10 +273,23 @@ Puedo ayudarte con:
           type="submit"
           disabled={loading || !input.trim()}
           className="p-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white shadow-xs transition-colors shrink-0"
+          aria-label="Enviar mensaje a MiPatas AI"
         >
           <Send className="w-4 h-4" />
         </button>
       </form>
+
+      {/* Clear Chat Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showClearConfirm}
+        title="¿Reiniciar conversación con MiPatas AI?"
+        description={`Se limpiará el historial de mensajes de la sesión actual con ${pet.name}. Podrás iniciar una nueva consulta en cualquier momento.`}
+        confirmLabel="Reiniciar conversación"
+        cancelLabel="Mantener chat"
+        variant="warning"
+        onConfirm={handleConfirmClearChat}
+        onClose={() => setShowClearConfirm(false)}
+      />
     </div>
   );
 };
