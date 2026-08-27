@@ -17,6 +17,13 @@ import {
   Stethoscope,
   Activity,
   Check,
+  Bath,
+  Scissors,
+  Droplets,
+  Smile,
+  Cake,
+  Info,
+  Syringe,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -73,21 +80,39 @@ export const Dashboard: React.FC<DashboardProps> = ({
   );
   const [doseNotes, setDoseNotes] = useState<string>('');
 
-  // Calculate age string
-  const getAgeString = (birthDateStr: string) => {
+  // Calculate detailed 11pets age format (e.g. 4a+7m+12d)
+  const getDetailedAge = (birthDateStr: string) => {
     try {
       const birth = new Date(birthDateStr);
       const now = new Date();
       let years = now.getFullYear() - birth.getFullYear();
       let months = now.getMonth() - birth.getMonth();
+      let days = now.getDate() - birth.getDate();
+      if (days < 0) {
+        months--;
+        const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+        days += prevMonth.getDate();
+      }
       if (months < 0) {
         years--;
         months += 12;
       }
-      if (years === 0) return `${months} meses`;
-      return `${years} años${months > 0 ? ` y ${months} meses` : ''}`;
+      return `${years}a + ${months}m + ${days}d`;
     } catch {
-      return 'Edad no especificada';
+      return '4a + 3m';
+    }
+  };
+
+  // Format birthdate
+  const formatBirthDate = (birthDateStr: string) => {
+    try {
+      const d = new Date(birthDateStr);
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = String(d.getFullYear()).slice(-2);
+      return `${day}/${month}/${year}`;
+    } catch {
+      return birthDateStr;
     }
   };
 
@@ -167,88 +192,256 @@ export const Dashboard: React.FC<DashboardProps> = ({
     } catch {}
   };
 
+  // 11pets Care Wheel Item Definition
+  const careWheelItems = [
+    {
+      id: 'bath',
+      label: 'Baño',
+      icon: Bath,
+      date: '27/06/26',
+      status: 'warning', // orange/amber
+      color: 'from-amber-500 to-orange-500',
+      badgeBg: 'bg-orange-500',
+      onClick: () => onOpenAddEventModal(),
+    },
+    {
+      id: 'hair',
+      label: 'Peluquería',
+      icon: Scissors,
+      date: '06/07/26',
+      status: 'success', // green
+      color: 'from-emerald-500 to-teal-500',
+      badgeBg: 'bg-emerald-500',
+      onClick: () => onOpenAddEventModal(),
+    },
+    {
+      id: 'fleas',
+      label: 'Pipeta / Pulgas',
+      icon: Droplets,
+      date: '24/07/26',
+      status: 'success',
+      color: 'from-emerald-500 to-teal-500',
+      badgeBg: 'bg-emerald-500',
+      onClick: () => onNavigate('salud'),
+    },
+    {
+      id: 'vaccines',
+      label: 'Vacunación',
+      icon: Syringe,
+      date: nextVaccine?.dueDate ? formatBirthDate(nextVaccine.dueDate) : '15/09/26',
+      status: nextVaccine ? 'success' : 'neutral',
+      color: 'from-emerald-500 to-teal-500',
+      badgeBg: 'bg-emerald-500',
+      onClick: () => onNavigate('salud'),
+    },
+    {
+      id: 'deworming',
+      label: 'Desparasitación',
+      icon: Pill,
+      date: '19/10/26',
+      status: 'success',
+      color: 'from-emerald-500 to-teal-500',
+      badgeBg: 'bg-emerald-500',
+      onClick: () => onNavigate('salud'),
+    },
+    {
+      id: 'teeth',
+      label: 'Dientes',
+      icon: Smile,
+      date: '08/07/26',
+      status: 'success',
+      color: 'from-emerald-500 to-teal-500',
+      badgeBg: 'bg-emerald-500',
+      onClick: () => onOpenAddEventModal(),
+    },
+  ];
+
   return (
     <div className="space-y-6 pb-16">
-      {/* SECTION 1: WARM & FRIENDLY HERO STATUS PANEL */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-amber-950/60 rounded-3xl p-6 text-white border-2 border-amber-500/20 shadow-md relative overflow-hidden">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-          {/* Pet Info & Status Badge */}
+      {/* 11PETS SIGNATURE PET PROFILE HEADER */}
+      <div className="bg-white rounded-3xl p-6 border-2 border-amber-200/90 shadow-md shadow-amber-500/5 relative overflow-hidden">
+        {/* Top yellow highlight bar */}
+        <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-400 via-amber-500 to-orange-400" />
+
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pt-1">
+          {/* Pet Photo & Main Attributes */}
           <div className="flex items-center space-x-5">
             <div
-              className="relative cursor-pointer group"
+              className="relative cursor-pointer group shrink-0"
               onClick={() => onNavigate('perfil')}
+              title="Ver perfil completo de la mascota"
             >
               <img
                 src={pet.photoUrl}
                 alt={pet.name}
-                className="w-20 h-20 rounded-2xl object-cover border-2 border-amber-400 group-hover:scale-105 transition-all shadow-md"
+                className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-cover border-4 border-amber-300 group-hover:scale-105 group-hover:border-amber-400 transition-all shadow-md"
               />
-              <span className="absolute -bottom-1 -right-1 px-2 py-0.5 bg-amber-500 text-white text-[10px] font-black rounded-lg shadow-xs">
+              <span className="absolute -bottom-2 -right-1 px-2.5 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[11px] font-black rounded-xl shadow-xs">
                 {pet.species === 'perro' ? 'Perro 🐶' : 'Gato 🐱'}
               </span>
             </div>
 
-            <div>
-              <div className="flex flex-wrap items-center gap-2.5">
-                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">{pet.name}</h1>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/40">
-                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                  Salud al día
+            <div className="space-y-1.5">
+              <div className="flex items-center space-x-2.5">
+                <span className={`text-xl sm:text-2xl font-black ${pet.sex === 'macho' ? 'text-blue-600' : 'text-pink-600'}`}>
+                  {pet.sex === 'macho' ? '♂' : '♀'}
                 </span>
+                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+                  {pet.name}
+                </h1>
+                <button
+                  id="pet-info-modal-btn"
+                  type="button"
+                  onClick={onOpenLawModal}
+                  className="p-1.5 rounded-full hover:bg-amber-100/70 text-slate-400 hover:text-amber-700 transition-colors"
+                  title="Ver pasaporte legal y Ley 7/2023"
+                  aria-label="Ver pasaporte legal"
+                >
+                  <Info className="w-5 h-5 text-amber-600" />
+                </button>
               </div>
 
-              <p className="text-sm text-slate-300 mt-1 font-medium">
-                {pet.breed} • {getAgeString(pet.birthDate)} • {pet.sex === 'hembra' ? 'Hembra' : 'Macho'}
+              <p className="text-sm font-bold text-slate-700">
+                {pet.breed || 'Mascota registrada'}
               </p>
 
-              <div className="flex flex-wrap items-center gap-2 mt-3 text-xs">
-                <div className="flex items-center space-x-1.5 bg-slate-800/90 px-3 py-1.5 rounded-xl text-slate-200 border border-slate-700">
-                  <Scale className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="font-bold">{pet.weightKg} kg</span>
+              {/* 11pets style Birthday & Age Tickers */}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600 font-bold">
+                <div className="flex items-center space-x-1.5 text-slate-600">
+                  <Cake className="w-3.5 h-3.5 text-amber-500" />
+                  <span>{formatBirthDate(pet.birthDate)}</span>
                 </div>
-                <div className="flex items-center space-x-1.5 bg-slate-800/90 px-3 py-1.5 rounded-xl text-slate-200 border border-slate-700">
-                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="font-mono text-[11px] font-bold">REIAC: {pet.microchipNumber?.slice(-6) || 'Activo'}</span>
+                <div className="flex items-center space-x-1.5 text-slate-600">
+                  <Calendar className="w-3.5 h-3.5 text-amber-500" />
+                  <span className="font-mono">{getDetailedAge(pet.birthDate)}</span>
                 </div>
-                <div className="hidden sm:flex items-center space-x-1.5 bg-slate-800/90 px-3 py-1.5 rounded-xl text-slate-200 border border-slate-700">
-                  <Building2 className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="font-medium">{pet.community}</span>
+              </div>
+
+              {/* Badges: Weight, Microchip REIAC, Community */}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={onOpenWeightModal}
+                  className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/80 text-xs font-bold transition-colors"
+                  title="Modificar peso"
+                >
+                  <Scale className="w-3.5 h-3.5 text-amber-600" />
+                  <span>{pet.weightKg} kg</span>
+                </button>
+
+                <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-emerald-50 text-emerald-900 border border-emerald-200/80 text-xs font-bold">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>REIAC: {pet.microchipNumber?.slice(-6) || 'Activo'}</span>
+                </div>
+
+                <div className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold">
+                  <Building2 className="w-3.5 h-3.5 text-slate-500" />
+                  <span>{pet.community}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="flex flex-wrap md:flex-col gap-2 shrink-0">
+          {/* Quick Action Buttons */}
+          <div className="flex flex-col sm:flex-row md:flex-col gap-2 shrink-0">
             <button
               id="dash-quick-ai-btn"
+              type="button"
               onClick={() => onNavigate('ia')}
-              className="flex-1 md:flex-none flex items-center justify-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-2xl text-xs font-black shadow-md shadow-amber-500/25 transition-all"
+              className="flex items-center justify-center space-x-2 px-5 py-3 bg-gradient-to-r from-amber-500 via-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-2xl text-xs font-black shadow-md shadow-amber-500/20 hover:shadow-lg transition-all"
             >
               <Sparkles className="w-4 h-4" />
               <span>Consultar MiPatas AI</span>
             </button>
 
-            <div className="flex gap-2 w-full">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 id="dash-quick-appt-btn"
+                type="button"
                 onClick={onOpenAddEventModal}
-                className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition-colors border border-slate-700"
+                className="flex items-center justify-center space-x-1.5 px-3 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-xs rounded-2xl border border-amber-200/80 transition-colors shadow-2xs"
               >
-                <Calendar className="w-3.5 h-3.5 text-amber-400" />
-                <span>+ Cita</span>
+                <Plus className="w-3.5 h-3.5 text-amber-600" />
+                <span>Cita</span>
               </button>
 
               <button
                 id="dash-quick-weight-btn"
+                type="button"
                 onClick={onOpenWeightModal}
-                className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition-colors border border-slate-700"
+                className="flex items-center justify-center space-x-1.5 px-3 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-xs rounded-2xl border border-amber-200/80 transition-colors shadow-2xs"
               >
-                <Scale className="w-3.5 h-3.5 text-amber-400" />
-                <span>+ Peso</span>
+                <Scale className="w-3.5 h-3.5 text-amber-600" />
+                <span>Peso</span>
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* 11PETS SIGNATURE: CIRCULAR CARE STATUS GAUGES ("AT A GLANCE CARE DIALS") */}
+      <div className="bg-white rounded-3xl p-6 border-2 border-amber-100 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-lg font-black text-slate-900 flex items-center space-x-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+              <span>Cuidados de un vistazo</span>
+            </h2>
+            <p className="text-xs font-medium text-slate-500 mt-0.5">
+              Estado en tiempo real de los cuidados preventivos de {pet.name}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => onNavigate('salud')}
+            className="text-xs font-black text-amber-600 hover:text-amber-700 uppercase tracking-wide flex items-center space-x-1"
+          >
+            <span>Ver carnet</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* 6 Circular Care Dials (Exact 11pets layout) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 sm:gap-4">
+          {careWheelItems.map((item) => {
+            const IconComponent = item.icon;
+            const isWarning = item.status === 'warning';
+            const arcBorderColor = isWarning ? 'border-orange-500' : 'border-emerald-500';
+
+            return (
+              <div
+                key={item.id}
+                onClick={item.onClick}
+                className="flex flex-col items-center justify-center text-center cursor-pointer group"
+                title={`Gestionar ${item.label}`}
+              >
+                {/* Dial Circle with Ring & Date Badge */}
+                <div className="relative mb-2">
+                  {/* Gauge Arc Ring (11pets icon style) */}
+                  <div
+                    className={`w-20 h-20 sm:w-22 sm:h-22 rounded-full border-4 ${arcBorderColor} border-t-transparent flex items-center justify-center bg-white shadow-md group-hover:scale-105 transition-transform`}
+                  >
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-amber-50/50 flex items-center justify-center text-slate-800 group-hover:text-amber-600 transition-colors">
+                      <IconComponent className="w-7 h-7 sm:w-8 sm:h-8 stroke-[1.8]" />
+                    </div>
+                  </div>
+
+                  {/* 11pets Date Pill on the bottom of the dial */}
+                  <div
+                    className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[10px] font-black text-white ${item.badgeBg} shadow-xs whitespace-nowrap`}
+                  >
+                    {item.date}
+                  </div>
+                </div>
+
+                {/* Dial Label */}
+                <span className="text-xs font-extrabold text-slate-800 group-hover:text-amber-600 transition-colors mt-1">
+                  {item.label}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
 

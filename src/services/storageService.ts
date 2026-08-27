@@ -485,15 +485,29 @@ export const StorageService = {
 
   // Initialization check (does not inject demo data automatically)
   init(): void {
-    // No-op: keep storage clean for real users
+    // Sanitize any legacy stray keys from past testing
+    try {
+      if (localStorage.getItem('isDemoMode') === 'true' && !localStorage.getItem(KEYS.PETS)) {
+        localStorage.removeItem('isDemoMode');
+      }
+    } catch {}
   },
 
   // Demo Mode check
   isDemoMode(): boolean {
+    try {
+      const legacy = localStorage.getItem('isDemoMode');
+      if (legacy === 'true' && getItem<Pet[]>(KEYS.PETS, []).length > 0) {
+        return true;
+      }
+    } catch {}
     return getItem<boolean>(KEYS.IS_DEMO_MODE, false);
   },
   setDemoMode(isDemo: boolean): void {
     setItem(KEYS.IS_DEMO_MODE, isDemo);
+    try {
+      localStorage.setItem('isDemoMode', String(isDemo));
+    } catch {}
   },
 
   // Load interactive demo data on explicit user request
@@ -512,6 +526,9 @@ export const StorageService = {
     setItem(KEYS.WEIGHT_HISTORY, INITIAL_WEIGHT_HISTORY);
     setItem(KEYS.ONBOARDING_COMPLETED, true);
     setItem(KEYS.IS_DEMO_MODE, true);
+    try {
+      localStorage.setItem('isDemoMode', 'true');
+    } catch {}
   },
 
   // Exit demo mode and clear all sample data
@@ -519,11 +536,17 @@ export const StorageService = {
     this.clearAllData();
     setItem(KEYS.IS_DEMO_MODE, false);
     setItem(KEYS.ONBOARDING_COMPLETED, false);
+    try {
+      localStorage.removeItem('isDemoMode');
+    } catch {}
   },
 
   // Clear all local data to start 100% fresh
   clearAllData(): void {
     Object.values(KEYS).forEach((k) => localStorage.removeItem(k));
+    try {
+      localStorage.removeItem('isDemoMode');
+    } catch {}
   },
 
   resetAllData(): void {

@@ -28,6 +28,13 @@ import {
   Award,
   Smartphone,
   Share2,
+  Bath,
+  Scissors,
+  Droplets,
+  Syringe,
+  Cake,
+  Info,
+  Menu,
 } from 'lucide-react';
 import { planPermissions } from '../utils/planPermissions';
 
@@ -220,32 +227,29 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </header>
 
-      {/* Hero Section — 11pets Warm & Friendly Style */}
-      <section className="relative overflow-hidden pt-8 pb-16 sm:pt-14 sm:pb-24 bg-gradient-to-b from-amber-50/50 via-[#FFFDF9] to-[#FFFDF9]">
+      {/* Hero Section — 11pets Signature Warm Yellow & Friendly Style */}
+      <section className="relative overflow-hidden pt-8 pb-16 sm:pt-14 sm:pb-24 bg-gradient-to-b from-amber-400 via-amber-400/90 to-amber-500 text-slate-900">
         {/* Soft Background Accents */}
-        <div className="absolute top-12 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-tr from-amber-200/30 via-orange-200/20 to-yellow-100/40 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-gradient-to-tr from-yellow-300/40 via-amber-300/30 to-orange-400/20 rounded-full blur-3xl pointer-events-none -z-10" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
             {/* Left Column: Friendly Hero Pitch */}
             <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
               {/* Spanish Law & Trust Badge */}
-              <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-amber-100/80 border border-amber-300/80 text-amber-950 text-xs font-bold shadow-2xs">
+              <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-white/90 backdrop-blur-sm border border-amber-200 text-slate-900 text-xs font-black shadow-sm">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Adaptado al 100% a la Ley 7/2023 & Microchip REIAC</span>
+                <span>Adaptado 100% a la Ley 7/2023 & Microchip REIAC España 🇪🇸</span>
               </div>
 
-              {/* Main Headline */}
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.1]">
-                Cuidar de tu mascota jamás fue tan{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600">
-                  fácil y cariñoso.
-                </span>
+              {/* Main Headline (Inspired directly by 11pets) */}
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-950 tracking-tight leading-[1.1]">
+                Información de un vistazo sobre las necesidades de tu mascota
               </h1>
 
               {/* Subheadline */}
-              <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium">
-                El carnet sanitario digital, registro de medicamentos con dosis compartidas, avisos de vacunas por Comunidad Autónoma y asistente veterinario con IA para dueños felices en España.
+              <p className="text-base sm:text-lg text-slate-900/90 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-semibold">
+                El carnet sanitario digital más completo: avisos automáticos de vacunas por Comunidad Autónoma, registro de medicamentos familiares, control de desparasitaciones y asistente veterinario con IA.
               </p>
 
               {/* Action Buttons */}
@@ -254,9 +258,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   id="hero-register-cta"
                   type="button"
                   onClick={onOpenRegister}
-                  className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-700 text-white font-black text-base shadow-lg shadow-amber-500/25 hover:shadow-xl transition-all flex items-center justify-center space-x-2.5 group"
+                  className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-slate-950 hover:bg-slate-900 text-white font-black text-base shadow-xl shadow-slate-950/20 hover:scale-[1.02] transition-all flex items-center justify-center space-x-2.5 group"
                 >
-                  <PawPrint className="w-5 h-5 fill-current" />
+                  <PawPrint className="w-5 h-5 text-amber-400 fill-current" />
                   <span>Empezar gratis ahora</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
@@ -265,107 +269,211 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   id="hero-demo-cta"
                   type="button"
                   onClick={onLaunchDemo}
-                  className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-white hover:bg-amber-50/60 text-slate-800 font-bold text-sm border-2 border-amber-200 shadow-sm hover:border-amber-300 transition-all flex items-center justify-center space-x-2"
+                  className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-white hover:bg-amber-50 text-slate-900 font-extrabold text-sm shadow-md hover:scale-[1.02] transition-all flex items-center justify-center space-x-2 border border-white"
                 >
-                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <Sparkles className="w-4 h-4 text-amber-600" />
                   <span>Ver demo interactiva</span>
                 </button>
               </div>
 
               {/* Feature Quick Badges */}
-              <div className="pt-6 border-t border-amber-100 grid grid-cols-3 gap-3 text-left">
-                <div className="bg-white/80 p-3 rounded-2xl border border-amber-100 shadow-2xs">
-                  <div className="flex items-center space-x-1.5 text-amber-600 font-black text-xs">
+              <div className="pt-6 border-t border-amber-300/70 grid grid-cols-3 gap-3 text-left">
+                <div className="bg-white/90 backdrop-blur-sm p-3.5 rounded-2xl border border-white shadow-xs">
+                  <div className="flex items-center space-x-1.5 text-amber-700 font-black text-xs">
                     <ShieldCheck className="w-4 h-4" />
                     <span>DNI Digital</span>
                   </div>
-                  <div className="text-[11px] text-slate-500 font-medium mt-0.5">Microchip REIAC 15 dígitos</div>
+                  <div className="text-[11px] text-slate-700 font-bold mt-0.5">Microchip REIAC 15 dígitos</div>
                 </div>
 
-                <div className="bg-white/80 p-3 rounded-2xl border border-amber-100 shadow-2xs">
-                  <div className="flex items-center space-x-1.5 text-orange-600 font-black text-xs">
+                <div className="bg-white/90 backdrop-blur-sm p-3.5 rounded-2xl border border-white shadow-xs">
+                  <div className="flex items-center space-x-1.5 text-emerald-700 font-black text-xs">
                     <HeartPulse className="w-4 h-4" />
                     <span>Salud al Día</span>
                   </div>
-                  <div className="text-[11px] text-slate-500 font-medium mt-0.5">Vacunas y desparasitación</div>
+                  <div className="text-[11px] text-slate-700 font-bold mt-0.5">Vacunas y desparasitación</div>
                 </div>
 
-                <div className="bg-white/80 p-3 rounded-2xl border border-amber-100 shadow-2xs">
-                  <div className="flex items-center space-x-1.5 text-amber-600 font-black text-xs">
+                <div className="bg-white/90 backdrop-blur-sm p-3.5 rounded-2xl border border-white shadow-xs">
+                  <div className="flex items-center space-x-1.5 text-amber-700 font-black text-xs">
                     <Sparkles className="w-4 h-4" />
                     <span>MiPatas AI</span>
                   </div>
-                  <div className="text-[11px] text-slate-500 font-medium mt-0.5">Consejos clínicos 24/7</div>
+                  <div className="text-[11px] text-slate-700 font-bold mt-0.5">Consejos clínicos 24/7</div>
                 </div>
               </div>
             </div>
 
-            {/* Right Column: Joyful Visual Collage (11pets inspired) */}
-            <div className="lg:col-span-5 relative">
-              <div className="relative mx-auto max-w-md">
-                {/* Main Animal Visual Card */}
-                <div className="bg-white rounded-3xl p-5 shadow-xl border-2 border-amber-100 space-y-4">
-                  {/* Cheerful Pets Photo */}
-                  <div className="relative rounded-2xl overflow-hidden aspect-[4/3] bg-amber-100 shadow-inner">
-                    <img
-                      src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=700&q=80"
-                      alt="Perro y gato felices"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
+            {/* Right Column: 11pets Smartphone Mockup with Care Wheels */}
+            <div className="lg:col-span-5 flex justify-center relative">
+              {/* Smartphone Frame */}
+              <div className="w-[320px] sm:w-[350px] bg-slate-900 p-3.5 rounded-[44px] shadow-2xl border-4 border-slate-800 relative">
+                {/* Phone Speaker Notch */}
+                <div className="w-32 h-4 bg-slate-800 rounded-full mx-auto mb-2 flex items-center justify-center">
+                  <div className="w-10 h-1 bg-slate-700 rounded-full" />
+                </div>
 
-                    {/* Floating Health Badge */}
-                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white">
-                      <div>
-                        <div className="text-base font-black flex items-center space-x-1.5">
-                          <span>Luna & Bruno</span>
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-extrabold">
-                            100% Protegidos
+                {/* Inner Screen */}
+                <div className="bg-[#FFFDF9] rounded-[36px] overflow-hidden text-slate-900 border border-slate-200 flex flex-col shadow-inner">
+                  {/* Smartphone Top App Bar (11pets Yellow Header) */}
+                  <div className="bg-amber-400 px-4 py-3 flex items-center justify-between border-b border-amber-300">
+                    <div className="flex items-center space-x-2">
+                      <Menu className="w-5 h-5 text-slate-900" />
+                      <span className="font-black text-base text-slate-900">Luna</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Sparkles className="w-4 h-4 text-slate-900" />
+                      <div className="w-6 h-6 rounded-full bg-slate-900 text-amber-400 font-black text-xs flex items-center justify-center">
+                        +
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Pet Profile Banner inside Phone */}
+                  <div className="bg-white p-3.5 border-b border-amber-100 flex items-center space-x-3">
+                    <img
+                      src="https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=150&q=80"
+                      alt="Luna"
+                      className="w-14 h-14 rounded-2xl object-cover border-2 border-amber-400 shrink-0"
+                    />
+                    <div className="text-xs space-y-0.5">
+                      <div className="flex items-center space-x-1 font-black text-slate-900 text-sm">
+                        <span className="text-pink-600 font-bold">♀</span>
+                        <span>Luna</span>
+                        <span className="text-[10px] text-slate-500 font-semibold">• Golden Retriever</span>
+                      </div>
+                      <div className="flex items-center space-x-2 text-[11px] text-slate-600 font-bold">
+                        <span className="flex items-center space-x-0.5">
+                          <Cake className="w-3 h-3 text-amber-500" />
+                          <span>12/04/21</span>
+                        </span>
+                        <span>4a + 4m + 10d</span>
+                      </div>
+                      <div className="flex items-center space-x-1.5 pt-0.5">
+                        <span className="px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-900 text-[9px] font-black">
+                          28.5 kg
+                        </span>
+                        <span className="px-1.5 py-0.2 rounded-md bg-emerald-100 text-emerald-900 text-[9px] font-black">
+                          REIAC: 489201
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 11pets Signature Care Dials Grid (6 Circular Indicators) */}
+                  <div className="p-3.5 bg-[#FFFDF9]">
+                    <div className="text-[11px] font-black text-slate-800 uppercase tracking-wider mb-2.5 flex items-center justify-between">
+                      <span>Cuidados de un vistazo</span>
+                      <span className="text-[10px] text-emerald-600 font-bold">● Al día</span>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      {/* Dial 1: Baño */}
+                      <div className="flex flex-col items-center">
+                        <div className="relative mb-1">
+                          <div className="w-13 h-13 rounded-full border-3 border-orange-500 border-t-transparent flex items-center justify-center bg-white shadow-xs">
+                            <Bath className="w-5 h-5 text-slate-800" />
+                          </div>
+                          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.2 rounded-full text-[8px] font-black text-white bg-orange-500 whitespace-nowrap">
+                            27/06/26
                           </span>
                         </div>
-                        <p className="text-[11px] text-amber-200">Vacuna de rabia y desparasitación al día</p>
+                        <span className="text-[10px] font-bold text-slate-800 mt-1">Baño</span>
+                      </div>
+
+                      {/* Dial 2: Peluquería */}
+                      <div className="flex flex-col items-center">
+                        <div className="relative mb-1">
+                          <div className="w-13 h-13 rounded-full border-3 border-emerald-500 border-t-transparent flex items-center justify-center bg-white shadow-xs">
+                            <Scissors className="w-5 h-5 text-slate-800" />
+                          </div>
+                          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.2 rounded-full text-[8px] font-black text-white bg-emerald-500 whitespace-nowrap">
+                            06/07/26
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-800 mt-1">Peluquería</span>
+                      </div>
+
+                      {/* Dial 3: Pipeta / Pulgas */}
+                      <div className="flex flex-col items-center">
+                        <div className="relative mb-1">
+                          <div className="w-13 h-13 rounded-full border-3 border-emerald-500 border-t-transparent flex items-center justify-center bg-white shadow-xs">
+                            <Droplets className="w-5 h-5 text-slate-800" />
+                          </div>
+                          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.2 rounded-full text-[8px] font-black text-white bg-emerald-500 whitespace-nowrap">
+                            24/07/26
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-800 mt-1">Pipeta</span>
+                      </div>
+
+                      {/* Dial 4: Vacunación */}
+                      <div className="flex flex-col items-center mt-1.5">
+                        <div className="relative mb-1">
+                          <div className="w-13 h-13 rounded-full border-3 border-emerald-500 border-t-transparent flex items-center justify-center bg-white shadow-xs">
+                            <Syringe className="w-5 h-5 text-slate-800" />
+                          </div>
+                          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.2 rounded-full text-[8px] font-black text-white bg-emerald-500 whitespace-nowrap">
+                            15/09/26
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-800 mt-1">Vacunación</span>
+                      </div>
+
+                      {/* Dial 5: Desparasitación */}
+                      <div className="flex flex-col items-center mt-1.5">
+                        <div className="relative mb-1">
+                          <div className="w-13 h-13 rounded-full border-3 border-emerald-500 border-t-transparent flex items-center justify-center bg-white shadow-xs">
+                            <Pill className="w-5 h-5 text-slate-800" />
+                          </div>
+                          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.2 rounded-full text-[8px] font-black text-white bg-emerald-500 whitespace-nowrap">
+                            19/10/26
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-800 mt-1">Desparasitación</span>
+                      </div>
+
+                      {/* Dial 6: Dientes */}
+                      <div className="flex flex-col items-center mt-1.5">
+                        <div className="relative mb-1">
+                          <div className="w-13 h-13 rounded-full border-3 border-emerald-500 border-t-transparent flex items-center justify-center bg-white shadow-xs">
+                            <Smile className="w-5 h-5 text-slate-800" />
+                          </div>
+                          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.2 rounded-full text-[8px] font-black text-white bg-emerald-500 whitespace-nowrap">
+                            08/07/26
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-800 mt-1">Dientes</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Interactive Status Snippets */}
-                  <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div className="p-3 rounded-2xl bg-amber-50/80 border border-amber-200/80">
-                      <div className="flex items-center space-x-1 text-amber-700 font-black text-[10px] uppercase">
-                        <Pill className="w-3.5 h-3.5 text-amber-600" />
-                        <span>Tratamiento</span>
-                      </div>
-                      <div className="font-bold text-slate-900 mt-1">Milbemax (Toma dada)</div>
-                      <div className="text-[10px] text-slate-500">Por María hace 2h</div>
+                  {/* Smartphone Bottom App Nav (11pets style) */}
+                  <div className="bg-white border-t border-amber-100 px-3 py-2 flex items-center justify-around text-[9px] font-bold text-slate-500">
+                    <div className="flex flex-col items-center text-amber-600">
+                      <PawPrint className="w-4 h-4" />
+                      <span>Inicio</span>
                     </div>
-
-                    <div className="p-3 rounded-2xl bg-emerald-50/80 border border-emerald-200/80">
-                      <div className="flex items-center space-x-1 text-emerald-700 font-black text-[10px] uppercase">
-                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Seguro RC</span>
-                      </div>
-                      <div className="font-bold text-slate-900 mt-1">Mapfre Válido 🇪🇸</div>
-                      <div className="text-[10px] text-slate-500">Obligatorio Ley 7/2023</div>
+                    <div className="flex flex-col items-center">
+                      <HeartPulse className="w-4 h-4" />
+                      <span>Salud</span>
                     </div>
-                  </div>
-
-                  {/* MiPatas AI Pill Bubble */}
-                  <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 text-xs space-y-1">
-                    <div className="flex items-center space-x-1.5 font-bold text-amber-950">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                      <span>MiPatas AI recuerda:</span>
+                    <div className="flex flex-col items-center">
+                      <Calendar className="w-4 h-4" />
+                      <span>Agenda</span>
                     </div>
-                    <p className="text-slate-700 text-[11px] leading-relaxed">
-                      "¡Todo listo para las vacaciones! La vacuna antirrábica de Luna es válida en toda España y la UE hasta 2026."
-                    </p>
+                    <div className="flex flex-col items-center">
+                      <Sparkles className="w-4 h-4" />
+                      <span>AI Clínico</span>
+                    </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Floating Decorative Stamp */}
-                <div className="absolute -top-4 -right-4 bg-gradient-to-tr from-amber-500 to-orange-500 text-white p-3 rounded-2xl shadow-lg rotate-6 flex items-center space-x-1.5 text-xs font-black">
-                  <Award className="w-4 h-4" />
-                  <span>Nº 1 en España</span>
-                </div>
+              {/* Floating Decorative Stamp */}
+              <div className="absolute -bottom-4 -right-2 bg-gradient-to-tr from-orange-600 to-amber-600 text-white p-3 rounded-2xl shadow-xl rotate-3 flex items-center space-x-1.5 text-xs font-black border-2 border-white">
+                <Award className="w-4 h-4" />
+                <span>Nº 1 en España</span>
               </div>
             </div>
           </div>
